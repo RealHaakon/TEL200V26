@@ -1,0 +1,79 @@
+% report.tex - Frontpage for the report (place in Report/)
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+\usepackage[HTML]{xcolor}
+\usepackage{tikz}
+\usepackage{geometry}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{gensymb}
+\usepackage{ulem}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{microtype}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{makecell}
+\geometry{margin=2.5cm}
+
+\AddToShipoutPictureBG{
+  \definecolor{sidebar}{HTML}{008571}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[sidebar]
+    (current page.north west)
+    rectangle
+    ([xshift=1.2cm]current page.south west);
+  \end{tikzpicture}
+}
+
+\begin{document}
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+    \vspace*{2cm}
+
+    % NMBU Logo
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.6\textwidth]{logos/nmbu_logo_tekst.jpg}
+    \end{figure}
+
+    {\Huge\bfseries TEL200 - Group 5}\\[0.5cm]
+    {\Large\itshape Yumi Lab Project}\\[1.5cm]
+    {\Large\itshape Equipment provided by NMBU}\\[1.5cm]
+
+    \rule{0.6\textwidth}{1pt}\\[0.8cm]
+
+    {\Large\bfseries Authors}\\[0.3cm]
+    {\large Andreas Brustad \\ Johannes Standal}\\[1cm]
+
+    %{\large\bfseries Supervisor}\\[0.3cm]
+    %{\large Dr. Supervisor Name}\\[2cm]
+
+    {}
+
+    \vfill
+
+    \small Eik Lab \\
+    Norwegian University of Life Sciences
+\end{titlepage}
+
+% NMBU watermark
+\AddToShipoutPictureBG{%
+  \AtPageUpperLeft{%
+    \raisebox{-2.5cm}{%
+      \hspace{1.072\textwidth}%
+      \includegraphics[width=2cm]{logos/nmbu_logo.jpg}
+    }%
+  }%
+}
