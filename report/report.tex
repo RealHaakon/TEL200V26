@@ -24,6 +24,13 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{makecell}
+\usepackage[
+backend=biber,
+style=alphabetic,
+sorting=ynt
+]{biblatex}
+\addbibresource{bibliography/bibliography.bib}
+
 \geometry{margin=2.5cm}
 
 \AddToShipoutPictureBG{
@@ -42,20 +49,25 @@
     \centering
     \vspace*{2cm}
 
-    % NMBU Logo
+    % Logos at the corners
     \begin{figure}[t]
         \centering
-        \includegraphics[width=0.6\textwidth]{logos/nmbu_logo_tekst.jpg}
+        \includegraphics[width=0.6\textwidth]{logos/nmbu_logo_tekst.jpeg}
     \end{figure}
+    %\includegraphics[width=0.35\textwidth]{logos/eik_lab_logo.jpeg}\\[1.5cm]
 
-    {\Huge\bfseries TEL200 - Group 5}\\[0.5cm]
-    {\Large\itshape Yumi Lab Project}\\[1.5cm]
-    {\Large\itshape Equipment provided by NMBU}\\[1.5cm]
+    {\Huge\bfseries TEL200 - Introduction to Robotics}\\[0.5cm]
+    {\Large\itshape Group 5}\\[1.5cm]
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=.7\textwidth]{images/yumi.jpeg}
+    \end{figure}
+    {\Large\itshape Funded by Eik Lab (pretty please)}\\[1.5cm]
 
     \rule{0.6\textwidth}{1pt}\\[0.8cm]
 
     {\Large\bfseries Authors}\\[0.3cm]
-    {\large Andreas Brustad \\ Johannes Standal}\\[1cm]
+    {\large Andreas Brustad \\ Johannes Standal \\ Håkon Bekken}\\[1cm]
 
     %{\large\bfseries Supervisor}\\[0.3cm]
     %{\large Dr. Supervisor Name}\\[2cm]
@@ -71,9 +83,42 @@
 % NMBU watermark
 \AddToShipoutPictureBG{%
   \AtPageUpperLeft{%
-    \raisebox{-2.5cm}{%
-      \hspace{1.072\textwidth}%
-      \includegraphics[width=2cm]{logos/nmbu_logo.jpg}
+    \raisebox{-3.5cm}{%
+      \hspace{1.07\textwidth}%
+      \includegraphics[width=3cm]{logos/nmbu_logo.png}
     }%
   }%
 }
+
+\tableofcontents
+
+\newpage
+
+\section{Abstract}
+
+\newpage
+
+\section{Introduction}
+
+\newpage
+
+\section{Method}
+
+\newpage
+
+\section{Results}
+
+\newpage
+
+\section{Discussion}
+
+\newpage
+
+\section{Conclusions}
+
+\newpage
+
+\section{Bibliography}
+\printbibliography
+
+\end{document}
