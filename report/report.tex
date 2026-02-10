@@ -102,6 +102,62 @@ sorting=ynt
 \newpage
 
 \section{Method}
+\subsection{RS BASIC}
+
+\subsection{YuMi Appliction}
+
+The control software for the dual-arm YuMi robot (IRB 14000) was developed in ABB's RAPID programming language within RobotStudio. The program implements a modular pick-and-place application that handles three distinct geometric objects (cube, cylinder, and triangular prism) based on external digital input signals. A key safety and recovery feature is the interrupt-driven emergency stop handling.
+
+The main structure is defined in \texttt{MODULE Module1}. A large number of \texttt{CONST robtarget} declarations define the taught positions for safe approach points, alignment poses, gripping locations, and drop-off positions for each object and work object (\texttt{cube}, \texttt{cyl}, \texttt{prizm}). These targets were recorded using the FlexPendant or RobotStudio's teaching interface and include full pose information (position, orientation quaternion, configuration data, and external axes).
+
+The entry point is the \texttt{Main()} procedure, which first initializes the gripper system via \texttt{g\_Init}. To prevent multiple connections of the same interrupt variable (a common source of runtime errors \texttt{ERR\_ALRDYCNT}), an initialization guard is used:
+
+\begin{verbatim}
+IF NOT interrupts_setup THEN
+    SkipWarn;
+    CONNECT stop_emer WITH EmergencyStop;
+    ISignalDI di_EmergencySituation, high, stop_emer;
+    interrupts_setup := TRUE;
+ENDIF
+\end{verbatim}
+
+A continuous loop then polls three digital input signals (\texttt{di\_cube}, \texttt{di\_cylinder}, \texttt{di\_prism}) and calls the corresponding path procedure when the respective signal is high:
+
+\begin{verbatim}
+WHILE TRUE DO
+    IF DInput(di_cube) = 1 THEN CubePath;
+    ELSEIF DInput(di_cylinder) = 1 THEN CyliPath;
+    ELSEIF DInput(di_prism) = 1 THEN PrizmPath;
+    ENDIF
+    WaitTime 0.1;
+ENDWHILE
+\end{verbatim}
+
+Each path procedure (\texttt{CubePath}, \texttt{CyliPath}, \texttt{PrizmPath}) consists of a sequence of \texttt{MoveJ} instructions with velocity \texttt{v500}, zone \texttt{fine} or \texttt{z100}, and the appropriate work object. The motion sequence follows a typical pick-and-place pattern: move to approach pose $\to$ align above object $\to$ descend to grip $\to$ grip object $\to$ lift $\to$ transport to drop position $\to$ release $\to$ return to home. Gripper commands (\texttt{g\_GripIn}, \texttt{g\_GripOut}) are inserted at the appropriate points, and short \texttt{WaitTime} instructions ensure stable execution and allow time for gripper action.
+
+The emergency stop functionality is implemented via a trap routine triggered by the rising edge of the digital input \texttt{di\_EmergencySituation}:
+
+\begin{verbatim}
+TRAP EmergencyStop
+    SkipWarn;
+    StopMove;
+    WaitUntil di_EmergencySituation = 0;
+    StorePath;
+    IF DInput(di_home) = 1 THEN
+        ClearPath;
+        MoveJ RealHome, v500, z100, Servo\WObj:=wobj0;
+        WaitTime 1;
+        ExitCycle;
+    ELSE
+        RestoPath;
+        StartMove;
+    ENDIF
+ENDTRAP
+\end{verbatim}
+
+When the emergency signal is active, the robot immediately halts motion (\texttt{StopMove}). After the signal is released, the program checks \texttt{di\_home}. If high, the path context is cleared, the robot moves to a safe recovery pose (\texttt{RealHome}), and \texttt{ExitCycle} resets execution to the beginning of the \texttt{Main} procedure (requiring continuous run mode in the controller). Otherwise, the original interrupted path is restored and motion resumes from the point of interruption.
+
+This interrupt-based architecture ensures robust safety handling while maintaining deterministic cyclic behavior in normal operation. All motion commands use joint interpolation (\texttt{MoveJ}) to avoid singularities and provide predictable behavior during teaching and execution.
 
 \newpage
 
