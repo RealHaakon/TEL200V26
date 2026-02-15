@@ -104,13 +104,12 @@ sorting=ynt
 \section{Method}
 \subsection{RS BASIC}
 
-\subsection{YuMi Appliction}
+\subsection{YuMi Application}
+The control software for the dual-arm YuMi robot (IRB 14000) was developed in ABB's RAPID programming language using RobotStudio. The application implements a modular pick-and-place task that handles three distinct geometric objects --- cube, cylinder, and triangular prism --- triggered by external digital input signals. A central safety and recovery mechanism is provided through interrupt-driven emergency stop handling.
 
-The control software for the dual-arm YuMi robot (IRB 14000) was developed in ABB's RAPID programming language within RobotStudio. The program implements a modular pick-and-place application that handles three distinct geometric objects (cube, cylinder, and triangular prism) based on external digital input signals. A key safety and recovery feature is the interrupt-driven emergency stop handling.
+The program is contained in \texttt{MODULE Module1}. It defines a large number of \texttt{CONST robtarget} constants that store the taught positions for each object. These include safe approach points, gripping poses, lifting positions, transport poses, and drop-off locations. Each target is associated with the appropriate work object (\texttt{wobj}) --- \texttt{Kube}, \texttt{sylinder}, \texttt{prisme} for pick-up phases, and typically \texttt{wobj0} for home and global movements. The positions were taught using the FlexPendant or RobotStudio's interface and include complete pose data (Cartesian position, orientation quaternion, robot configuration, and external axes values).
 
-The main structure is defined in \texttt{MODULE Module1}. A large number of \texttt{CONST robtarget} declarations define the taught positions for safe approach points, alignment poses, gripping locations, and drop-off positions for each object and work object (\texttt{cube}, \texttt{cyl}, \texttt{prizm}). These targets were recorded using the FlexPendant or RobotStudio's teaching interface and include full pose information (position, orientation quaternion, configuration data, and external axes).
-
-The entry point is the \texttt{Main()} procedure, which first initializes the gripper system via \texttt{g\_Init}. To prevent multiple connections of the same interrupt variable (a common source of runtime errors \texttt{ERR\_ALRDYCNT}), an initialization guard is used:
+The main entry point is the \texttt{Main()} procedure, which first initializes the gripper system by calling \texttt{g\_Init}. To avoid the common runtime error \texttt{ERR\_ALRDYCNT} caused by connecting the same interrupt multiple times, an initialization guard is used:
 
 \begin{verbatim}
 IF NOT interrupts_setup THEN
@@ -121,21 +120,38 @@ IF NOT interrupts_setup THEN
 ENDIF
 \end{verbatim}
 
-A continuous loop then polls three digital input signals (\texttt{di\_cube}, \texttt{di\_cylinder}, \texttt{di\_prism}) and calls the corresponding path procedure when the respective signal is high:
+The program then enters an infinite loop that continuously polls three digital input signals (\texttt{di\_cube}, \texttt{di\_cylinder}, \texttt{di\_prism}) and calls the corresponding handling procedure when a signal is high:
 
 \begin{verbatim}
 WHILE TRUE DO
-    IF DInput(di_cube) = 1 THEN CubePath;
-    ELSEIF DInput(di_cylinder) = 1 THEN CyliPath;
-    ELSEIF DInput(di_prism) = 1 THEN PrizmPath;
+    IF di_cube = 1 THEN Cube;
     ENDIF
-    WaitTime 0.1;
+    IF di_cylinder = 1 THEN syl;
+    ENDIF
+    IF di_prism = 1 THEN prism;
+    ENDIF
 ENDWHILE
 \end{verbatim}
 
-Each path procedure (\texttt{CubePath}, \texttt{CyliPath}, \texttt{PrizmPath}) consists of a sequence of \texttt{MoveJ} instructions with velocity \texttt{v500}, zone \texttt{fine} or \texttt{z100}, and the appropriate work object. The motion sequence follows a typical pick-and-place pattern: move to approach pose $\to$ align above object $\to$ descend to grip $\to$ grip object $\to$ lift $\to$ transport to drop position $\to$ release $\to$ return to home. Gripper commands (\texttt{g\_GripIn}, \texttt{g\_GripOut}) are inserted at the appropriate points, and short \texttt{WaitTime} instructions ensure stable execution and allow time for gripper action.
+Each object-specific procedure (\texttt{Cube}, \texttt{syl}, \texttt{prism}) follows a similar pick-and-place sequence:
+\begin{enumerate}
+    \item Move to home position
+    \item Approach the pick-up area
+    \item Open gripper (\texttt{g\_GripOut}) and wait
+    \item Descend to gripping pose
+    \item Close gripper (\texttt{g\_GripIn}) and wait
+    \item Lift back to approach height
+    \item Transport to drop area
+    \item Descend to release pose
+    \item Open gripper and wait
+    \item Lift slightly
+    \item Return to home position
+\end{enumerate}
 
-The emergency stop functionality is implemented via a trap routine triggered by the rising edge of the digital input \texttt{di\_EmergencySituation}:
+Most motions use \texttt{MoveJ} with speed \texttt{v500}  and accuracy \texttt{fine} at critical points or \texttt{z100} during faster transfers. 
+Wait times of 2 seconds after gripper commands ensure reliable mechanical action.
+
+The emergency stop is implemented as a trap routine triggered on the rising edge of \texttt{di\_EmergencySituation}:
 
 \begin{verbatim}
 TRAP EmergencyStop
@@ -145,7 +161,7 @@ TRAP EmergencyStop
     StorePath;
     IF DInput(di_home) = 1 THEN
         ClearPath;
-        MoveJ RealHome, v500, z100, Servo\WObj:=wobj0;
+        MoveJ home, v500, fine, Servo\WObj:=wobj0;
         WaitTime 1;
         ExitCycle;
     ELSE
@@ -154,12 +170,59 @@ TRAP EmergencyStop
     ENDIF
 ENDTRAP
 \end{verbatim}
-
-When the emergency signal is active, the robot immediately halts motion (\texttt{StopMove}). After the signal is released, the program checks \texttt{di\_home}. If high, the path context is cleared, the robot moves to a safe recovery pose (\texttt{RealHome}), and \texttt{ExitCycle} resets execution to the beginning of the \texttt{Main} procedure (requiring continuous run mode in the controller). Otherwise, the original interrupted path is restored and motion resumes from the point of interruption.
-
-This interrupt-based architecture ensures robust safety handling while maintaining deterministic cyclic behavior in normal operation. All motion commands use joint interpolation (\texttt{MoveJ}) to avoid singularities and provide predictable behavior during teaching and execution.
-
+When the emergency input becomes active, motion stops immediately (\texttt{StopMove}). 
+After the signal is released, the program checks \texttt{di\_home}. 
+If high, it clears the path context, moves to the safe \texttt{home} position, 
+and executes \texttt{ExitCycle} to restart from the beginning of \texttt{Main()}. 
+Otherwise it restores and resumes the interrupted path. This mechanism provides both immediate safety response and flexible recovery.
 \newpage
+
+\subsection{YuMi Tic-Tac-Toe Challenge}
+A tic-tac-toe demonstration was developed for the dual-arm YuMi robot to play against a human opponent. The robot exclusively draws ``X'' symbols, while the human manually places ``O'' symbols on a physical 3×3 grid. The human communicates their move to the robot using external digital inputs.
+\begin{figure}[H]
+        \centering
+        \includegraphics[width=.7\textwidth]{images/yumichallengeSetup.png}
+        \caption{yumi Challenge setup}
+        \label{fig:yumi Challenge setup}
+    \end{figure}
+
+The robot uses two digital inputs to select the grid cell:
+- \texttt{di\_x} increments the X coordinate
+- \texttt{di\_y} increments the Y coordinate
+- \texttt{di\_exe} triggers execution of the selected cell
+
+A custom CAD model was designed and 3D-printed for both the pen (marker) and the pen holder to ensure reliable and repeatable tool pickup and placement.
+
+The nine grid cells are divided between the two arms according to the following mapping (first digit = X coordinate, second digit = Y coordinate):
+
+\begin{table}[H]
+\centering
+\caption{Grid cell assignment to robot arms}
+\begin{tabular}{c|c|c|c}
+\toprule
+\textbf{} & \textbf{X=0} & \textbf{X=1} & \textbf{X=2} \\
+\midrule
+\textbf{Y=0} & Right: P00 & Right: P10 & Left: P20 \\
+\textbf{Y=1} & Right: P01 & Right: P11 & Left: P21 \\
+\textbf{Y=2} & Right: P02 & Left: P12 & Left: P22 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each path procedure follows a simple sequence:
+\begin{itemize}
+    \item Move to home position
+    \item Pick the pen from holder
+    \item Move to cell-specific waypoints and draw the X
+    \item Return pen to holder
+    \item Return to home and resets X and
+\end{itemize}
+
+Motion commands use \texttt{MoveJ} at speed \texttt{v500}, with \texttt{fine} or small zones (\texttt{z50}--\texttt{z100}) for smooth and accurate drawing. Gripper commands are followed by \texttt{WaitTime 2} to ensure stable handling.
+
+The same interrupt-based emergency stop system is implemented as in the pick-and-place application. For correct operation, the controller must be set to \textbf{continuous} run mode.
+
+This project demonstrates YuMi's precision, tool handling capability, and safe interaction with humans in a fun, educational game application.
 
 \section{Results}
 
