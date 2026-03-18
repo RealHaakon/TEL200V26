@@ -178,51 +178,88 @@ Otherwise it restores and resumes the interrupted path. This mechanism provides 
 \newpage
 
 \subsection{YuMi Tic-Tac-Toe Challenge}
-A tic-tac-toe demonstration was developed for the dual-arm YuMi robot to play against a human opponent. The robot exclusively draws ``X'' symbols, while the human manually places ``O'' symbols on a physical 3×3 grid. The human communicates their move to the robot using external digital inputs.
-\begin{figure}[H]
-        \centering
-        \includegraphics[width=.7\textwidth]{images/yumichallengeSetup.png}
-        \caption{yumi Challenge setup}
-        \label{fig:yumi Challenge setup}
-    \end{figure}
+The Tic-Tac-Toe project was implemented on the dual-arm YuMi robot using two independent RAPID modules --- one for the left arm and one for the right arm. Each arm operates autonomously but follows the same general logic: to select and draw an ``X'' in one of nine grid cells based on incoming digital signals.
 
-The robot uses two digital inputs to select the grid cell:
-- \texttt{di\_x} increments the X coordinate
-- \texttt{di\_y} increments the Y coordinate
-- \texttt{di\_exe} triggers execution of the selected cell
+\subsubsection*{Program structure}
+Both arms continuously poll three digital inputs:
+\begin{itemize}
+  \item \texttt{di\_cube}: increments the X coordinate
+  \item \texttt{di\_cylinder}: increments the Y coordinate
+  \item \texttt{di\_prism}: confirms execution
+\end{itemize}
+Two counters (\texttt{X} and \texttt{Y}) track the selected grid cell. Depending on the X--Y combination, the program calls one of several path procedures such as \texttt{Path\_P00}, \texttt{Path\_P11}, or \texttt{Path\_P22}.
 
-A custom CAD model was designed and 3D-printed for both the pen (marker) and the pen holder to ensure reliable and repeatable tool pickup and placement.
-
-The nine grid cells are divided between the two arms according to the following mapping (first digit = X coordinate, second digit = Y coordinate):
-
+The human--robot grid is divided between the arms as follows:
 \begin{table}[H]
-\centering
-\caption{Grid cell assignment to robot arms}
-\begin{tabular}{c|c|c|c}
-\toprule
-\textbf{} & \textbf{X=0} & \textbf{X=1} & \textbf{X=2} \\
-\midrule
-\textbf{Y=0} & Right: P00 & Right: P10 & Left: P20 \\
-\textbf{Y=1} & Right: P01 & Right: P11 & Left: P21 \\
-\textbf{Y=2} & Right: P02 & Left: P12 & Left: P22 \\
-\bottomrule
-\end{tabular}
+  \centering
+  \caption{Grid cell assignment to robot arms}
+  \begin{tabular}{c|c|c|c}
+    \toprule
+           & \textbf{X=0} & \textbf{X=1} & \textbf{X=2} \\
+    \midrule
+    \textbf{Y=0} & Right: P00 & Right: P10 & Left: P20 \\
+    \textbf{Y=1} & Right: P01 & Right: P11 & Left: P21 \\
+    \textbf{Y=2} & Right: P02 & Left: P12  & Left: P22 \\
+    \bottomrule
+  \end{tabular}
 \end{table}
 
-Each path procedure follows a simple sequence:
-\begin{itemize}
-    \item Move to home position
-    \item Pick the pen from holder
-    \item Move to cell-specific waypoints and draw the X
-    \item Return pen to holder
-    \item Return to home and resets X and
-\end{itemize}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/yumichallengeSetup.png}
+  \caption{YumichallengeSetup in simulation and live.}
+\end{figure}
 
-Motion commands use \texttt{MoveJ} at speed \texttt{v500}, with \texttt{fine} or small zones (\texttt{z50}--\texttt{z100}) for smooth and accurate drawing. Gripper commands are followed by \texttt{WaitTime 2} to ensure stable handling.
+\subsubsection*{Path execution}
+When a cell is selected, the corresponding path procedure executes a fixed sequence:
+\begin{enumerate}
+  \item Move to the home position.
+  \item Move to \texttt{PenCenter} (safe pose above pen holder).
+  \item Open gripper (\texttt{g\_GripOut}), descend to \texttt{PenPickDrop}, and close gripper (\texttt{g\_GripIn}) to pick up the pen.
+  \item Move through a series of target points (\texttt{Target\_10}, \texttt{Target\_20}, etc.) to draw an ``X''.
+  \item Return to \texttt{PenCenter}, drop off the pen, and return to home.
+  \item Reset both \texttt{X} and \texttt{Y} to zero, ready for the next move.
+\end{enumerate}
+Joint motions (\texttt{MoveJ}) are used for most positioning, while linear motions (\texttt{MoveL}) ensure smooth, straight drawing lines. Speeds are set to \texttt{v500} with fine or small blending zones (\texttt{z50}--\texttt{z100}) depending on path precision.
 
-The same interrupt-based emergency stop system is implemented as in the pick-and-place application. For correct operation, the controller must be set to \textbf{continuous} run mode.
+\subsection{CAD Models}
+To support reliable pen handling, a custom CAD design was created for both the \textbf{marker holder} and the \textbf{pen adapter}. The parts were designed in Autodesk Fusion 360 and 3D-printed in PETG.
 
-This project demonstrates YuMi's precision, tool handling capability, and safe interaction with humans in a fun, educational game application.
+The holder fixes the pen in a repeatable position on the table, while the adapter ensures proper orientation and grip alignment with the robot's fingers. This modular approach improved drawing consistency and made tool pickup or drop-off fully repeatable between runs.
+Also a pen was designed in Autodesk that is identical in dimentions to the marker used in order to get correct point to floor distance.
+
+
+A rendering of the final design is shown in Figure. 
+
+\begin{figure}[h]
+\centering
+\subcaptionbox{The marker holder}[0.3\linewidth]{
+    \includegraphics[width=\linewidth]{images/MarkerHolder.png}
+}\hfill
+\subcaptionbox{The pen adapter}[0.25\linewidth]{
+    \includegraphics[width=\linewidth]{images/Pen adapter.png}
+}\hfill
+\subcaptionbox{Marker}[0.2\linewidth]{
+    \includegraphics[width=\linewidth]{images/Pen.png}
+}\hfill
+\subcaptionbox{Marker and adapter}[0.2\linewidth]{
+    \includegraphics[width=\linewidth]{images/IMG_7242.JPG}
+}\hfill
+\subcaptionbox{Live demo}[0.5\linewidth]{
+    \includegraphics[width=\linewidth]{images/Grip.png}
+}
+\caption{How the CAD models was implemented}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\subcaptionbox{Simulation of drawing}[0.55\linewidth]{
+    \includegraphics[width=\linewidth]{images/drawingsim.png}
+}\hfill
+\subcaptionbox{Drawing during real simulation}[0.45\linewidth]{
+    \includegraphics[width=\linewidth]{images/RealDrawing.png}
+}
+\end{figure}
 
 \section{Results}
 
