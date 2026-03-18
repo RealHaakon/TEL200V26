@@ -82,9 +82,9 @@ sorting=ynt
 % NMBU watermark
 \AddToShipoutPictureBG{%
   \AtPageUpperLeft{%
-    \raisebox{-3.5cm}{%
-      \hspace{1.07\textwidth}%
-      \includegraphics[width=3cm]{logos/nmbu_logo.png}
+    \raisebox{-2.3cm}{%
+      \hspace{1.14\textwidth}%
+      \includegraphics[width=2cm]{logos/nmbu_logo.png}
     }%
   }%
 }
@@ -98,11 +98,25 @@ sorting=ynt
 \newpage
 
 \section{Introduction}
+\subsection{Yumi Application}
+The goal for the yumi application part of the project was to enable the robot to manipulate objects.
+There are three blocks that shall be moved to their appropriate location, a button input for each block,
+and one emergency stop button. The blocks are all different shapes, and each have two spots on the table.
+The corresponding button input shall cause the robot to pick the block up and move it to its other spot.
+It should stop in its tracks at the push of the emergency stop button. There is also a fourth button that
+will move the robot back to its home position.
+
+\subsection{Yumi Challenge}
+The goal for the yumi challenge part of the project was to enable the robot to play tic tac toe.
+By placing paper on the table and making the robot grip a marker we could program it to draw shapes in
+the locations we want. Specifically, we made it draw an X at coordinate points in a $3\times3$ coordinate field.
+It's controlled through button inputs, one for the $x$-coordinate and one for the $y$-coordinate. Pressing the
+button will incrementally increase the corresponding value by 1. A third button is used to indicate that the
+desired values are reached, and start the related motion.
 
 \newpage
 
 \section{Method}
-\subsection{RS BASIC}
 
 \subsection{YuMi Application}
 The control software for the dual-arm YuMi robot (IRB 14000) was developed in ABB's RAPID programming language using RobotStudio. The application implements a modular pick-and-place task that handles three distinct geometric objects --- cube, cylinder, and triangular prism --- triggered by external digital input signals. A central safety and recovery mechanism is provided through interrupt-driven emergency stop handling.
