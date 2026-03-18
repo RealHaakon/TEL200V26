@@ -121,77 +121,22 @@ using Robot Studio.
 \section{Method}
 
 \subsection{YuMi Application}
-The control software for the dual-arm YuMi robot (IRB 14000) was developed in ABB's RAPID programming language using RobotStudio. The application implements a modular pick-and-place task that handles three distinct geometric objects --- cube, cylinder, and triangular prism --- triggered by external digital input signals. A central safety and recovery mechanism is provided through interrupt-driven emergency stop handling.
+The control software for the dual‑arm YuMi robot (IRB 14000) was developed in ABB’s RAPID language using RobotStudio. The application implements a pick‑and‑place task for three objects (cube, cylinder, and triangular prism), each triggered by a dedicated digital input signal. The robot moves each object from its original position on the table to a corresponding “new” position, while returning to a safe home pose after each sequence.
 
-The program is contained in \texttt{MODULE Module1}. It defines a large number of \texttt{CONST robtarget} constants that store the taught positions for each object. These include safe approach points, gripping poses, lifting positions, transport poses, and drop-off locations. Each target is associated with the appropriate work object (\texttt{wobj}) --- \texttt{Kube}, \texttt{sylinder}, \texttt{prisme} for pick-up phases, and typically \texttt{wobj0} for home and global movements. The positions were taught using the FlexPendant or RobotStudio's interface and include complete pose data (Cartesian position, orientation quaternion, robot configuration, and external axes values).
+The program is contained in \texttt{MODULE Module1} and defines a set of \texttt{CONST robtarget} positions for each object, including approach points, gripping poses, and drop‑off locations. These targets are associated with separate work objects (\texttt{Kube}, \texttt{sylinder}, \texttt{prisme}), while global movements use \texttt{wobj0}. All motions are executed using \texttt{MoveJ} at speed \texttt{v500} with \texttt{fine} or \texttt{z100} accuracy, ensuring smooth and repeatable trajectories. Gripper commands (\texttt{g\_GripOut}/\texttt{g\_GripIn}) are followed by \texttt{WaitTime 2} to ensure reliable mechanical action.
 
-The main entry point is the \texttt{Main()} procedure, which first initializes the gripper system by calling \texttt{g\_Init}. To avoid the common runtime error \texttt{ERR\_ALRDYCNT} caused by connecting the same interrupt multiple times, an initialization guard is used:
+The system includes a fully functional emergency stop, implemented via an interrupt on the signal \texttt{di\_EmergencySituation}. When activated, the robot halts immediately using \texttt{StopMove} and the output \texttt{do\_emergency} is set high. After the emergency button is released, the robot checks the \texttt{di\_home} signal; if active, it returns to the \texttt{home} position and restarts the cycle, otherwise it restores and resumes the interrupted path. The emergency logic is supported by ABB Smart Components in RobotStudio, which provide a simulated realistic button and emergency circuit behavior for testing and validation.
 
-\begin{verbatim}
-IF NOT interrupts_setup THEN
-    SkipWarn;
-    CONNECT stop_emer WITH EmergencyStop;
-    ISignalDI di_EmergencySituation, high, stop_emer;
-    interrupts_setup := TRUE;
-ENDIF
-\end{verbatim}
+\begin{figure}[H]
+\centering
+\subcaptionbox{Emergency button unpressed}[0.55\linewidth]{
+    \includegraphics[width=\linewidth]{images/ButtonUnpressed.png}
+}\hfill
+\subcaptionbox{Emergency button pressed}[0.40\linewidth]{
+    \includegraphics[width=\linewidth]{images/ButtonPressed.png}
+}
+\end{figure}
 
-The program then enters an infinite loop that continuously polls three digital input signals (\texttt{di\_cube}, \texttt{di\_cylinder}, \texttt{di\_prism}) and calls the corresponding handling procedure when a signal is high:
-
-\begin{verbatim}
-WHILE TRUE DO
-    IF di_cube = 1 THEN Cube;
-    ENDIF
-    IF di_cylinder = 1 THEN syl;
-    ENDIF
-    IF di_prism = 1 THEN prism;
-    ENDIF
-ENDWHILE
-\end{verbatim}
-
-Each object-specific procedure (\texttt{Cube}, \texttt{syl}, \texttt{prism}) follows a similar pick-and-place sequence:
-\begin{enumerate}
-    \item Move to home position
-    \item Approach the pick-up area
-    \item Open gripper (\texttt{g\_GripOut}) and wait
-    \item Descend to gripping pose
-    \item Close gripper (\texttt{g\_GripIn}) and wait
-    \item Lift back to approach height
-    \item Transport to drop area
-    \item Descend to release pose
-    \item Open gripper and wait
-    \item Lift slightly
-    \item Return to home position
-\end{enumerate}
-
-Most motions use \texttt{MoveJ} with speed \texttt{v500}  and accuracy \texttt{fine} at critical points or \texttt{z100} during faster transfers. 
-Wait times of 2 seconds after gripper commands ensure reliable mechanical action.
-
-The emergency stop is implemented as a trap routine triggered on the rising edge of \texttt{di\_EmergencySituation}:
-
-\begin{verbatim}
-TRAP EmergencyStop
-    SkipWarn;
-    StopMove;
-    WaitUntil di_EmergencySituation = 0;
-    StorePath;
-    IF DInput(di_home) = 1 THEN
-        ClearPath;
-        MoveJ home, v500, fine, Servo\WObj:=wobj0;
-        WaitTime 1;
-        ExitCycle;
-    ELSE
-        RestoPath;
-        StartMove;
-    ENDIF
-ENDTRAP
-\end{verbatim}
-When the emergency input becomes active, motion stops immediately (\texttt{StopMove}). 
-After the signal is released, the program checks \texttt{di\_home}. 
-If high, it clears the path context, moves to the safe \texttt{home} position, 
-and executes \texttt{ExitCycle} to restart from the beginning of \texttt{Main()}. 
-Otherwise it restores and resumes the interrupted path. This mechanism provides both immediate safety response and flexible recovery.
-\newpage
 
 \subsection{YuMi Tic-Tac-Toe Challenge}
 The Tic-Tac-Toe project was implemented on the dual-arm YuMi robot using two independent RAPID modules --- one for the left arm and one for the right arm. Each arm operates autonomously but follows the same general logic: to select and draw an ``X'' in one of nine grid cells based on incoming digital signals.
@@ -221,9 +166,13 @@ The human--robot grid is divided between the arms as follows:
 \end{table}
 
 \begin{figure}[H]
-  \centering
-  \includegraphics[width=0.7\textwidth]{images/yumichallengeSetup.png}
-  \caption{YumichallengeSetup in simulation and live.}
+\centering
+\subcaptionbox{Yumi Challenge Setup}[0.5\linewidth]{
+    \includegraphics[height=5cm]{images/yumichallengeSetup.png}
+}\hfill
+\subcaptionbox{Yumi challenge live}[0.5\linewidth]{
+    \includegraphics[height=5cm]{images/yumichallengeLiveSetup.png}
+}
 \end{figure}
 
 \subsubsection*{Path execution}
@@ -240,40 +189,37 @@ Joint motions (\texttt{MoveJ}) are used for most positioning, while linear motio
 
 \subsection{CAD Models}
 To support reliable pen handling, a custom CAD design was created for both the \textbf{marker holder} and the \textbf{pen adapter}. The parts were designed in Autodesk Fusion 360 and 3D-printed in PETG.
-
 The holder fixes the pen in a repeatable position on the table, while the adapter ensures proper orientation and grip alignment with the robot's fingers. This modular approach improved drawing consistency and made tool pickup or drop-off fully repeatable between runs.
 Also a pen was designed in Autodesk that is identical in dimentions to the marker used in order to get correct point to floor distance.
-
-
 A rendering of the final design is shown in Figure. 
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \subcaptionbox{The marker holder}[0.3\linewidth]{
-    \includegraphics[width=\linewidth]{images/MarkerHolder.png}
+    \includegraphics[height=3cm]{images/MarkerHolder.png}
 }\hfill
 \subcaptionbox{The pen adapter}[0.25\linewidth]{
-    \includegraphics[width=\linewidth]{images/Pen adapter.png}
+    \includegraphics[height=3cm]{images/Pen adapter.png}
 }\hfill
-\subcaptionbox{Marker}[0.2\linewidth]{
-    \includegraphics[width=\linewidth]{images/Pen.png}
+\subcaptionbox{3D Marker}[0.15\linewidth]{
+    \includegraphics[height=3cm]{images/Pen.png}
 }\hfill
-\subcaptionbox{Marker and adapter}[0.2\linewidth]{
-    \includegraphics[width=\linewidth]{images/IMG_7242.JPG}
+\subcaptionbox{Marker and adapter}[0.25\linewidth]{
+    \includegraphics[height=3cm]{images/IMG_7242.JPG}
 }\hfill
 \subcaptionbox{Live demo}[0.5\linewidth]{
-    \includegraphics[width=\linewidth]{images/Grip.png}
+    \includegraphics[height=9cm]{images/Grip.png}
 }
 \caption{How the CAD models was implemented}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-\subcaptionbox{Simulation of drawing}[0.55\linewidth]{
-    \includegraphics[width=\linewidth]{images/drawingsim.png}
+\subcaptionbox{Simulation of drawing}[0.5\linewidth]{
+    \includegraphics[height=7.5cm]{images/drawingsim.png}
 }\hfill
-\subcaptionbox{Drawing during real simulation}[0.45\linewidth]{
-    \includegraphics[width=\linewidth]{images/RealDrawing.png}
+\subcaptionbox{Drawing during real simulation}[0.5\linewidth]{
+    \includegraphics[height=7.5cm]{images/RealDrawing.png}
 }
 \end{figure}
 
