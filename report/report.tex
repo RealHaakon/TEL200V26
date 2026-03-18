@@ -104,7 +104,8 @@ There are three blocks that shall be moved to their appropriate location, a butt
 and one emergency stop button. The blocks are all different shapes, and each have two spots on the table.
 The corresponding button input shall cause the robot to pick the block up and move it to its other spot.
 It should stop in its tracks at the push of the emergency stop button. There is also a fourth button that
-will move the robot back to its home position.
+will move the robot back to its home position. To achieve this goal we will program the yumi lab robot
+using Robot Studio.
 
 \subsection{Yumi Challenge}
 The goal for the yumi challenge part of the project was to enable the robot to play tic tac toe.
@@ -112,7 +113,8 @@ By placing paper on the table and making the robot grip a marker we could progra
 the locations we want. Specifically, we made it draw an X at coordinate points in a $3\times3$ coordinate field.
 It's controlled through button inputs, one for the $x$-coordinate and one for the $y$-coordinate. Pressing the
 button will incrementally increase the corresponding value by 1. A third button is used to indicate that the
-desired values are reached, and start the related motion.
+desired values are reached, and start the related motion. To achieve this goal we will program the yumi lab robot
+using Robot Studio.
 
 \newpage
 
@@ -243,6 +245,14 @@ This project demonstrates YuMi's precision, tool handling capability, and safe i
 \newpage
 
 \section{Discussion}
+We started work on making the robot autonomously respond to user moves. By creating a python script to function
+as a tic-tac-toe AI, as well as a python script to serve as a bridge between the AI and the robot with TCP/IP, the
+robot can theoretically play without being manually controlled by the human. We envisioned the following logical flow: \\\\
+$\text{User input for user move} \rightarrow \text{Robot sends the user input as a packet to the python server} \rightarrow
+\text{Python server calls the AI to get the robots move} \rightarrow \text{Server returns robot move packet to robot} \rightarrow
+\text{Robot follows the appropriate path for the received xy-coordinates}$ \\\\
+With this structure an autonomous robot tic-tac-toe player can be achieved, though it requires the robot
+to be connected via ethernet.
 
 \newpage
 
