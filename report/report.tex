@@ -146,7 +146,7 @@ Both arms continuously poll three digital inputs:
 \begin{itemize}
   \item \texttt{di\_cube}: increments the X coordinate
   \item \texttt{di\_cylinder}: increments the Y coordinate
-  \item \texttt{di\_prism}: confirms execution
+  \item \texttt{di\_prism}: confirms path execution
 \end{itemize}
 Two counters (\texttt{X} and \texttt{Y}) track the selected grid cell. Depending on the X--Y combination, the program calls one of several path procedures such as \texttt{Path\_P00}, \texttt{Path\_P11}, or \texttt{Path\_P22}.
 
@@ -181,33 +181,33 @@ When a cell is selected, the corresponding path procedure executes a fixed seque
   \item Move to the home position.
   \item Move to \texttt{PenCenter} (safe pose above pen holder).
   \item Open gripper (\texttt{g\_GripOut}), descend to \texttt{PenPickDrop}, and close gripper (\texttt{g\_GripIn}) to pick up the pen.
-  \item Move through a series of target points (\texttt{Target\_10}, \texttt{Target\_20}, etc.) to draw an ``X''.
+  \item Move through a series of target points to draw an ``X''.
   \item Return to \texttt{PenCenter}, drop off the pen, and return to home.
   \item Reset both \texttt{X} and \texttt{Y} to zero, ready for the next move.
 \end{enumerate}
 Joint motions (\texttt{MoveJ}) are used for most positioning, while linear motions (\texttt{MoveL}) ensure smooth, straight drawing lines. Speeds are set to \texttt{v500} with fine or small blending zones (\texttt{z50}--\texttt{z100}) depending on path precision.
 
 \subsection{CAD Models}
-To support reliable pen handling, a custom CAD design was created for both the \textbf{marker holder} and the \textbf{pen adapter}. The parts were designed in Autodesk Fusion 360 and 3D-printed in PETG.
+To support reliable pen handling, a custom CAD design was created for both the \textbf{pen holder} and the \textbf{pen adapter}. The parts were designed in Autodesk Fusion 360 and 3D-printed in PETG.
 The holder fixes the pen in a repeatable position on the table, while the adapter ensures proper orientation and grip alignment with the robot's fingers. This modular approach improved drawing consistency and made tool pickup or drop-off fully repeatable between runs.
-Also a pen was designed in Autodesk that is identical in dimentions to the marker used in order to get correct point to floor distance.
-A rendering of the final design is shown in Figure. 
+Also a pen was designed in Autodesk that is identical in dimentions to the marker used in order to get correct point to floor distance while programming in rapid.
+A rendering of the final design is shown in figure bellow. 
 
 \begin{figure}[H]
 \centering
-\subcaptionbox{The marker holder}[0.3\linewidth]{
+\subcaptionbox{The pen holder}[0.3\linewidth]{
     \includegraphics[height=3cm]{images/MarkerHolder.png}
 }\hfill
 \subcaptionbox{The pen adapter}[0.25\linewidth]{
     \includegraphics[height=3cm]{images/Pen adapter.png}
 }\hfill
-\subcaptionbox{3D Marker}[0.15\linewidth]{
+\subcaptionbox{3D pen}[0.15\linewidth]{
     \includegraphics[height=3cm]{images/Pen.png}
 }\hfill
-\subcaptionbox{Marker and adapter}[0.25\linewidth]{
+\subcaptionbox{Pen+adapter assembled}[0.3\linewidth]{
     \includegraphics[height=3cm]{images/IMG_7242.JPG}
 }\hfill
-\subcaptionbox{Live demo}[0.5\linewidth]{
+\subcaptionbox{Live demo of gripping mechanicm}[0.5\linewidth]{
     \includegraphics[height=9cm]{images/Grip.png}
 }
 \caption{How the CAD models was implemented}
