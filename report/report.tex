@@ -116,8 +116,6 @@ button will incrementally increase the corresponding value by 1. A third button 
 desired values are reached, and start the related motion. To achieve this goal we will program the yumi lab robot
 using Robot Studio.
 
-\newpage
-
 \section{Method}
 
 \subsection{YuMi Application}
@@ -150,7 +148,7 @@ Both arms continuously poll three digital inputs:
 \end{itemize}
 Two counters (\texttt{X} and \texttt{Y}) track the selected grid cell. Depending on the X--Y combination, the program calls one of several path procedures such as \texttt{Path\_P00}, \texttt{Path\_P11}, or \texttt{Path\_P22}.
 
-The human--robot grid is divided between the arms as follows:
+The human-robot grid is divided between the arms as follows:
 \begin{table}[H]
   \centering
   \caption{Grid cell assignment to robot arms}
@@ -224,6 +222,49 @@ A rendering of the final design is shown in figure bellow.
 \end{figure}
 
 \section{Results}
+
+\subsection{Yumi application}
+The YuMi application was successfully implemented and verified both in simulation and on the physical robot, with the pick-and-place sequences for all three objects executing as planned. A key factor in achieving robust behavior was the consistent use of joint-space motion commands (\texttt{MoveJ}), which ensured smooth trajectories and reduced the risk of encountering configurations analogous to gimbal lock in the robots wrist by avoiding problematic intermediate orientations.
+As a result, the robot was able to move reliably between home, approach, and grasp poses without unexpected singular behavior or loss of orientational degrees of freedom.
+
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Yumi application live}[0.3\linewidth]{
+    \includegraphics[height=4cm]{images/YumiApplicationLive.png}
+}\hfill
+\subcaptionbox{Yumi simulation emergency}[0.4\linewidth]{
+    \includegraphics[height=4cm]{images/YumiApplicationSimEmergency.png}
+}\hfill
+\subcaptionbox{Yumi live emergency}[0.3\linewidth]{
+    \includegraphics[height=4cm]{images/YumiApplicationLiveEmergency.png}
+}
+\end{figure}
+
+
+\subsection{Yumi challenge}
+In the Tic-Tac-Toe challenge, the overall logic for coordinate selection and path execution functioned as intended, but the live experiments revealed several practical limitations. During repeated pen handover and parking operations, we experienced collisions between the pen and the holder, which eventually led to mechanical failure of one gripper finger,
+despite using nominally identical target points and trajectories for the right and left arms.
+The YuMi system proved very sensitive to external impacts and contact forces; even small unintended forces triggered the built-in collision detection,
+causing the robot to stop and requiring manual intervention before motion could resume.
+
+The drawing performance was also somewhat inconsistent, with small deviations in the contact point or pen orientation leading to visible variation in line quality and stroke placement, which highlighted the need for highly accurate and repeatable target positions on the paper surface.
+The custom-designed pen holder and gripper adapter were therefore a significant asset,
+as they helped standardize the pen pose relative to the robot and improved the consistency between simulation and live execution by providing a repeatable mechanical interface during pickup and drop-off.
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Insert problem}[0.3\linewidth]{
+    \includegraphics[height=6cm]{images/InsertProblem.png}
+}\hfill
+\subcaptionbox{Misalignment of point}[0.4\linewidth]{
+    \includegraphics[width=6cm,angle=270]{images/IMG_7225.jpeg}
+}\hfill
+\subcaptionbox{Broken finger}[0.3\linewidth]{
+    \includegraphics[width=6cm,angle=270]{images/IMG_7226.jpeg}
+}
+\caption{Some problems along the way}
+\end{figure}
 
 \newpage
 
