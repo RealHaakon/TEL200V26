@@ -133,6 +133,12 @@ It's controlled through button inputs, one for the $x$-coordinate and one for th
 button will incrementally increase the corresponding value by 1. A third button is used to indicate that the
 desired values are reached, and start the related motion. To achieve this goal we will program the yumi lab robot
 using Robot Studio.
+\\\\
+Precision movements like these are very relevant in the current landscape of robotics. While the use case in industry
+might not be to match shapes like this, the ability to precisely manipulate objects with care and accuracy
+is incredibly important for areas like manufacturing. It allows for the handling of objects too
+difficult for people to handle with appropriate care, and it allows for automation of
+repetitive tasks.
 
 \section{Method}
 
@@ -287,14 +293,16 @@ as they helped standardize the pen pose relative to the robot and improved the c
 \newpage
 
 \section{Discussion}
-We started work on making the robot autonomously respond to user moves. By creating a python script to function
-as a tic-tac-toe AI, as well as a python script to serve as a bridge between the AI and the robot with TCP/IP, the
-robot can theoretically play without being manually controlled by the human. We envisioned the following logical flow: \\\\
-$\text{User input for user move} \rightarrow \text{Robot sends the user input as a packet to the python server} \rightarrow
-\text{Python server calls the AI to get the robots move} \rightarrow \text{Server returns robot move packet to robot} \rightarrow
-\text{Robot follows the appropriate path for the received xy-coordinates}$ \\\\
-With this structure an autonomous robot tic-tac-toe player can be achieved, though it requires the robot
-to be connected via ethernet.
+\subsection{Yumi Challenge}
+We believe the reason for inconsistent marker placements in the pen holder is due to
+seemingly insignificant collisions changing its orientation inside the gripper adapter.
+This can potentially be remedied by simply making the adapter longer, further reducing
+the markers ability to shift orientation. A bigger challenge however is the inconsistent
+drawing quality. Since all the robot moves draw at the exact same height, variations in the height
+of the platform it's drawing on will lead to inconsistent quality, if not a complete lack of
+ability to draw in certain areas. A potential way to remedy this is to implement a spring system in
+the platform, leading to the marker always hitting without giving so much resistance that the marker
+orientation changes or the robot detects a collision.
 
 \newpage
 
