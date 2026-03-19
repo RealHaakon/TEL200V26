@@ -26,7 +26,7 @@
 \usepackage{makecell}
 \usepackage[
 backend=biber,
-style=alphabetic,
+style=apa,
 sorting=ynt
 ]{biblatex}
 \addbibresource{bibliography/bibliography.bib}
@@ -98,6 +98,24 @@ sorting=ynt
 \newpage
 
 \section{Introduction}
+
+\subsection{Relevant theory for robot kinematics}
+Industrial robots like YuMi are modeled as serial kinematic chains, where joint configurations map to end-effector positions and orientations via forward and inverse kinematics. Joint-space motions are often preferred because they interpolate directly between known, safe configurations and avoid unexpected behavior in Cartesian space.
+
+A singularity occurs when the robots Jacobian loses rank, so that some Cartesian motions require infinite joint velocities or become unreachable. Near such configurations, small changes in the desired tool pose can cause large, unstable joint motions, which is why singularities must be avoided in trajectory planning.
+
+Gimbal lock is a related loss of rotational freedom that appears when two rotation axes align, effectively removing one independent degree of freedom. In robot wrists, analogous situations arise when joints line up so that certain orientations cannot be changed independently, leading to abrupt angle changes or poor controllability; careful selection of poses and joint-space paths reduces the likelihood of passing through these problematic regions.
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{ Illustration of gimbal lock (\cite{Gimbal_lock})}[0.5\linewidth]{
+    \includegraphics[height=5.5cm]{images/Gimbal_lock.png}
+}\hfill
+\subcaptionbox{Workspace and singularities (\cite{robodk_singularities})}[0.4\linewidth]{
+    \includegraphics[height=5.5cm]{images/workspaceAndSingularities.jpg}
+}
+\end{figure}
+
 \subsection{Yumi Application}
 The goal for the yumi application part of the project was to enable the robot to manipulate objects.
 There are three blocks that shall be moved to their appropriate location, a button input for each block,
