@@ -29,7 +29,9 @@ backend=biber,
 style=apa,
 sorting=ynt
 ]{biblatex}
+\renewcommand{\bibfont}{\small}
 \addbibresource{bibliography/bibliography.bib}
+
 
 \geometry{margin=2.5cm}
 
@@ -165,7 +167,7 @@ The control software for the dual‑arm YuMi robot (IRB 14000) was developed in 
 
 The program is contained in \texttt{MODULE Module1} and defines a set of \texttt{CONST robtarget} positions for each object, including approach points, gripping poses, and drop‑off locations. These targets are associated with separate work objects (\texttt{Kube}, \texttt{sylinder}, \texttt{prisme}), while global movements use \texttt{wobj0}. All motions are executed using \texttt{MoveJ} at speed \texttt{v500} with \texttt{fine} or \texttt{z100} accuracy, ensuring smooth and repeatable trajectories. Gripper commands (\texttt{g\_GripOut}/\texttt{g\_GripIn}) are followed by \texttt{WaitTime 2} to ensure reliable mechanical action.
 
-The system includes a fully functional emergency stop, implemented via an interrupt on the signal \texttt{di\_EmergencySituation}. When activated, the robot halts immediately using \texttt{StopMove} and the output \texttt{do\_emergency} is set high. After the emergency button is released, the robot checks the \texttt{di\_home} signal; if active, it returns to the \texttt{home} position and restarts the cycle, otherwise it restores and resumes the interrupted path. The emergency logic is supported by ABB Smart Components in RobotStudio, which provide a simulated realistic button and emergency circuit behavior for testing and validation.
+The system includes a fully functional emergency stop, implemented via an interrupt on the signal \texttt{di\_EmergencySituation}. When activated, the robot halts immediately using \texttt{StopMove} and the output \texttt{do\_emergency} is set high. After the emergency button is released, the robot checks the \texttt{di\_home} signal; if active, it returns to the \texttt{home} position and restarts the cycle, otherwise it restores and resumes the interrupted path. The emergency logic provide a simulated realistic button and emergency circuit behavior for testing and validation.
 
 \begin{figure}[H]
 \centering
@@ -331,7 +333,6 @@ The first potential issue can be remedied by simply making the adapter longer, f
 the markers ability to shift orientation. The second potential issue can be fixed by using linear
 joint movements instead, though that can prove challenging with potential gimbal locks. The third
 potential issue can be fixed by simply repositioning the pen holder to a more convenient spot for the robot.
-\\\\
 A bigger challenge however is the inconsistent
 drawing quality. Since all the robot moves draw at the exact same height, variations in the height
 of the platform it's drawing on will lead to inconsistent quality, if not a complete lack of
@@ -348,17 +349,12 @@ button inputs. Each button led to its respective shape being picked up and moved
 location. The use of joint space motion commands let us avoid gimbal locks and singularities. The
 emergency stop button functioned as intended, stopping the robot in its tracks when pressed, and resuming when
 released. A video of both the simulation and practical testing was recorded and uploaded to youtube. (\cite{yumiapplication})
-
 \subsection{Yumi challenge}
 In conclusion, while our implementation worked in simulation, practical testing revealed several limitations.
 These limitations were due to several potential reasons, with several potential ways of fixing them. Despite
 these revealed limitations however, the robot did mostly act as intended, leading to successful games of
 tic-tac-toe. By implementing the measures outlined in the discussion, the results should be even more consistent.
 A video of both the simulation and practical testing was recorded and uploaded to youtube. (\cite{yumichallenge})
-
-\newpage
-
 \section{Bibliography}
 \printbibliography
-
 \end{document}
