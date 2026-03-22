@@ -100,8 +100,8 @@ ABB RobotStudio to do two distinct tasks referred to as "Yumi Application" and "
 
 \subsection{Yumi Application}
 The Yumi Application involved programming the robot to manipulate a cube, a cylinder and a triangle based
-on their respective button inputs. Upon a button press the robot would pick up the geometric object and place
-it in its designated location on the other side of the table. Through the use of joint space motion commands
+on their respective button inputs. Upon a button press, the robot would pick up the geometric object and place
+it in its designated location on the other side of the table. Through the use of joint space motion commands,
 gimbal locks and singularities were avoided, and the application successfully worked. An emergency stop button
 was also implemented successfully, as well as a button to have the robot return to its home position after
 an emergency stop.
@@ -139,7 +139,7 @@ There are three blocks that shall be moved to their appropriate location, a butt
 and one emergency stop button. The blocks are all different shapes, and each have two spots on the table.
 The corresponding button input shall cause the robot to pick the block up and move it to its other spot.
 It should stop in its tracks at the push of the emergency stop button. There is also a fourth button that
-will move the robot back to its home position. To achieve this goal we will program the yumi lab robot
+will move the robot back to its home position. To achieve this goal we programmed the yumi lab robot
 using Robot Studio.
 
 \subsection{Yumi Challenge}
@@ -148,7 +148,7 @@ By placing paper on the table and making the robot grip a marker we could progra
 the locations we want. Specifically, we made it draw an X at coordinate points in a $3\times3$ coordinate field.
 It's controlled through button inputs, one for the $x$-coordinate and one for the $y$-coordinate. Pressing the
 button will incrementally increase the corresponding value by 1. A third button is used to indicate that the
-desired values are reached, and start the related motion. To achieve this goal we will program the yumi lab robot
+desired values are reached, and start the related motion. To achieve this goal we programmed the yumi lab robot
 using Robot Studio.
 
 \subsection{Relevancy}
@@ -268,7 +268,7 @@ A rendering of the final design is shown in figure bellow.
 \subsection{Yumi application}
 The YuMi application was successfully implemented and verified both in simulation and on the physical robot,
 with the pick-and-place sequences for all three objects executing as planned. The emergency stop button worked as intended,
-stopping the robot in its tracks both in simulation and in practice, and the home button ensured it returned home after an
+stopping the robot in its tracks, both in simulation and in practice, and the home button ensured it returned home after an
 emergency stop if pressed. As a result, the robot was able to move reliably between home, approach,
 and grasp poses without unexpected singular behavior or loss of orientational degrees of freedom.
 
@@ -347,13 +347,14 @@ In conclusion, we successfully programmed the yumi robot to manipulate the desir
 button inputs. Each button led to its respective shape being picked up and moved to its designated
 location. The use of joint space motion commands let us avoid gimbal locks and singularities. The
 emergency stop button functioned as intended, stopping the robot in its tracks when pressed, and resuming when
-released.
+released. A video of both the simulation and practical testing was recorded and uploaded to youtube. (\cite{yumiapplication})
 
 \subsection{Yumi challenge}
 In conclusion, while our implementation worked in simulation, practical testing revealed several limitations.
 These limitations were due to several potential reasons, with several potential ways of fixing them. Despite
 these revealed limitations however, the robot did mostly act as intended, leading to successful games of
 tic-tac-toe. By implementing the measures outlined in the discussion, the results should be even more consistent.
+A video of both the simulation and practical testing was recorded and uploaded to youtube. (\cite{yumichallenge})
 
 \newpage
 
