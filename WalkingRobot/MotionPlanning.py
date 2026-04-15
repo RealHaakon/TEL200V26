@@ -108,7 +108,6 @@ scale = 200 * mm
 env.launch(limits=[-scale, scale, -scale, scale, -0.15, 0.05])
 
 # Rotational matrix for adjusting the legs
-leg_adjustment = SE3.Rz(pi)
 
 # instantiate each robot in the backend environment
 for leg in legs:
@@ -117,8 +116,19 @@ for leg in legs:
 
 # Create the robot
 body = Cuboid([L, W, 30 * mm], color='b')
-body.base = SE3(0, 0, 0)  
+body.base = SE3(0, 0, 0)
+T = body.base
 env.add(body)
+
+# Rotation for legs
+leg_adjustment = SE3.Rz(pi)
+
+# Update leg positions
+legs[0].base = T * SE3( L / 2, -W / 2, 0) 
+legs[1].base = T * SE3(-L / 2, -W / 2, 0) 
+legs[2].base = T * SE3( L / 2,  W / 2, 0) * leg_adjustment
+legs[3].base = T * SE3(-L / 2,  W / 2, 0) * leg_adjustment
+
 
 env.step()
 
@@ -157,8 +167,8 @@ def walk100mm(x, y, angle):
         # Update leg positions
         legs[0].base = T * SE3( L / 2, -W / 2, 0) 
         legs[1].base = T * SE3(-L / 2, -W / 2, 0) 
-        legs[3].base = T * SE3(-L / 2,  W / 2, 0) * leg_adjustment
         legs[2].base = T * SE3( L / 2,  W / 2, 0) * leg_adjustment
+        legs[3].base = T * SE3(-L / 2,  W / 2, 0) * leg_adjustment
 
 
         legs[0].q = gait(qcycle, i, 0, False)
