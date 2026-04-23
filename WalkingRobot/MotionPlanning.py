@@ -9,8 +9,6 @@ import math
 pi = math.pi
 
 # Copyright (C) 1993-2021, by Peter I. Corke
-
-
 mm = 0.001
 L1 = 100 * mm
 L2 = 100 * mm
@@ -71,7 +69,7 @@ segments = np.array([
 # has the slow down.  However the middle 2->3->4->1 is smooth cyclic
 # motion so we "cut it out" and use it.
 print('create trajectory\n')
-traj = mstraj(segments, tsegment=[3, 0.25, 0.5, 0.25], dt=0.01, tacc=0.07)
+traj = mstraj(segments, tsegment=[3, 0.25, 0.5, 0.25], dt=0.01, tacc=0.02)
 print('inverse kinematics (this will take a moment)....', end='')
 
 xcycle = traj.q
@@ -179,8 +177,11 @@ def walk100mm(x, y, angle):
 
     return x, y, angle
 
-def turn1deg(x, y, angle):
+def turn1deg(x, y, angle, clockwise = False):
     turning_speed = 1 * 2 * pi / 360 # rotation angle per qcycle
+
+    if (clockwise): 
+        turning_speed *= -1
     
     for i in range(400):
         # Check if quit application
@@ -218,16 +219,16 @@ for cycle in range(max_num_cycles):
     x, y, angle = walk100mm(x, y, angle)
 
 # walk 10cm (10 cycles)
-for i in range(2):
-    x, y, angle = walk100mm(x, y, angle)
+for i in range(4):
+    x, y, angle = turn1deg(x, y, angle, True)
 
 # turn 10deg (10 cycles)
-for i in range(3):
-    x, y, angle = turn1deg(x, y, angle)
+for i in range(4):
+    x, y, angle = walk100mm(x, y, angle)
 
 # walk 10cm (10 cycles)
-for i in range(2):
-    x, y, angle = walk100mm(x, y, angle)
+for i in range(4):
+    x, y, angle = turn1deg(x, y, angle, False)
 
 
 env.hold()
