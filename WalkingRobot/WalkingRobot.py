@@ -17,6 +17,9 @@ class WalkingRobot:
         self.x = 0
         self.y = 0
         self.angle = 0
+
+        # Callback for plotting position as it walks
+        self.debug_callback = None
         
         # Physical attributes
         self._width = 100 * mm
@@ -81,6 +84,10 @@ class WalkingRobot:
         """
         Relates the robot to the position given by the pose parameters
         """
+        # Debug callback for map visualization
+        if self.debug_callback is not None:
+            self.debug_callback(self.x, self.y, self.angle)
+        
         T = SE3(self.x, self.y, 0) * SE3.Rz(self.angle)
         self.body.base = T
 
@@ -168,16 +175,21 @@ class WalkingRobot:
             numWalks = round(dst / (100 * mm))
 
             targetAngle = math.atan2(dy, dx)
-            numTurns = round(self.angle - targetAngle)
+            dtheta = targetAngle - self.angle
+            dtheta = (dtheta + np.pi) % (2*np.pi) - np.pi
+           
+            numTurns = round(np.rad2deg(dtheta))
 
             print(f'turns: {numTurns}, walks: {numWalks}')
 
             clockwise = (numTurns < 0)
             for i in range(abs(numTurns)):
                 self.turn1deg(clockwise)
+                print(self.x, self.y)
 
             for i in range(numWalks):
                 self.walk100mm()
+                print(self.x, self.y)
 
     def walk100mm(self):
         numFrames = self._walk_qcycle.shape[0]
@@ -237,7 +249,7 @@ class WalkingRobot:
 
 
 # commented out ignore rest of code
-robot = WalkingRobot()
-robot.walk100mm()
-for i in range(10):
-    robot.turn1deg()
+# robot = WalkingRobot()
+# robot.walk100mm()
+# for i in range(10):
+#     robot.turn1deg()
