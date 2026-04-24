@@ -214,6 +214,24 @@ phase offset per leg, and $N = 400$ is the total cycle length. For legs on the
 right-hand side, the sign of the first joint angle is flipped to mirror the
 motion symmetrically.
 
+For pose the robot is modelled as \textit{unicycle}, a common kinematic abstraction
+for mobile robots moving on a planar surface. The robot pose is fully
+described by three states:
+
+\begin{equation}
+    \mathbf{x}_v = (x,\, y,\, \theta)^T
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=5cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
+    \caption{Illustration of pose using unicycle model
+    \cite{Unicycle_model}}
+\end{figure}
+
+where $x$ and $y$ are the position coordinates in the global reference frame
+and $\theta$ is the heading angle relative to the $x$-axis.
+
 
 \subsection{Path Planning}
 
