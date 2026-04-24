@@ -38,8 +38,8 @@ class WalkingRobot:
         print("Building qcycles, this may take a while...")
         
         # Durations
-        self._walk_duration = 0.1
-        self._turn_duration = 0.01
+        self._walk_duration = 1
+        self._turn_duration = 0.25
 
 
         self._walk_qcycle = self._createGaitCycle(self._walk_duration)
@@ -80,6 +80,8 @@ class WalkingRobot:
         self.y = y
         self.angle = angle
 
+        self._updatePose()
+
     def _updatePose(self):
         """
         Relates the robot to the position given by the pose parameters
@@ -105,52 +107,75 @@ class WalkingRobot:
 
     def _createGaitCycle(self, duration):
         """
-        Create animation cycle for the leg motion
+        Stable quadruped gait cycle.
+        - 75% stance phase
+        - 25% swing phase
+        - Iterative IK for smooth joint motion
+        - Guarantees ≥3 legs on ground with 4-phase offsets
         """
+
         dt = 0.01
         n_frames = int(duration / dt)
 
-        # Foot geometry (meters)
-        step_length = 0.10      # 10 cm forward-back
+        # ---- Foot geometry (meters) ----
+        step_length = 0.10      # 10 cm forward/back
         step_height = 0.03      # 3 cm lift
-        y_offset = -0.05        # lateral offset
-        z_ground = -0.05        # ground height
+        y_offset   = -0.05      # lateral offset
+        z_ground   = -0.05      # ground height
+
+        # ---- Gait timing ----
+        stance_ratio = 0.75
+        swing_ratio  = 0.25
 
         q_cycle = []
-        
-        # Initial guess for IK
-        q_prev = np.array([0, 0, -0.8])
+
+        # Initial IK guess (important for continuity)
+        q_prev = np.array([0.0, 0.0, -0.8])
 
         for k in range(n_frames):
 
-            # phase variable [0,1)
+            # phase variable [0, 1)
             s = k / n_frames
 
-            # --- stance phase (foot on ground) ---
-            if s < 0.5:
-                alpha = s / 0.5
+            # ------------------------
+            # STANCE PHASE (75%)
+            # ------------------------
+            if s < stance_ratio:
+
+                alpha = s / stance_ratio  # normalized [0,1]
+
+                # foot moves backward relative to body
                 x = step_length/2 - alpha * step_length
                 z = z_ground
 
-            # --- swing phase (foot lifted) ---
+            # ------------------------
+            # SWING PHASE (25%)
+            # ------------------------
             else:
-                alpha = (s - 0.5) / 0.5
+
+                alpha = (s - stance_ratio) / swing_ratio  # normalized [0,1]
+
+                # foot moves forward
                 x = -step_length/2 + alpha * step_length
-                
+
                 # smooth sinusoidal lift
                 z = z_ground + step_height * np.sin(np.pi * alpha)
 
+            # Desired foot pose
             foot_pose = SE3(x, y_offset, z)
 
+            # Solve IK with previous solution as initial guess
             sol = self._leg_model.ikine_LM(
                 foot_pose,
                 q0=q_prev,
-                mask=[1,1,1,0,0,0]
+                mask=[1, 1, 1, 0, 0, 0]
             )
 
             q = sol.q
             q_cycle.append(q)
-            q_prev = q  # important for continuity
+
+            # Critical for continuity
+            q_prev = q
 
         return np.array(q_cycle)
 
@@ -239,17 +264,9 @@ class WalkingRobot:
             self._updatePose()
 
             self.legs[0].q = self._gait(self._turn_qcycle, elapsed,       numFrames * 0 / 4, False)
-            self.legs[1].q = self._gait(self._turn_qcycle, 400 - elapsed, numFrames * 1 / 4, False)
+            self.legs[1].q = self._gait(self._turn_qcycle, numFrames - elapsed, numFrames * 1 / 4, False)
             self.legs[2].q = self._gait(self._turn_qcycle, elapsed,       numFrames * 2 / 4, True)
-            self.legs[3].q = self._gait(self._turn_qcycle, 400 - elapsed, numFrames * 3 / 4, True)
+            self.legs[3].q = self._gait(self._turn_qcycle, numFrames - elapsed, numFrames * 3 / 4, True)
             
             # update env
             self._env.step(dt=dt)
-        
-
-
-# commented out ignore rest of code
-# robot = WalkingRobot()
-# robot.walk100mm()
-# for i in range(10):
-#     robot.turn1deg()

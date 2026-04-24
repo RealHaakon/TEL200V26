@@ -17,12 +17,6 @@ print('create leg model\n')
 # now create a robot to represent a single leg
 leg = ERobot(ET.Rz() * ET.Rx() * ET.ty(L1) * ET.Rx() * ET.tz(-L2))
 
-# Limit joint movements
-leg.qlim = np.array([
-    [-pi/2,   0,     0],  # lowerbound
-    [ pi/2,  pi,  pi]     # upperbound
-])
-
 # define the key parameters of the gait trajectory, 
 # walking in the x-direction
 
