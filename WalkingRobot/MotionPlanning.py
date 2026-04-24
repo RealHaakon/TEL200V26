@@ -1,5 +1,4 @@
 from roboticstoolbox import *
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from spatialmath import SE3
@@ -69,7 +68,7 @@ segments = np.array([
 # has the slow down.  However the middle 2->3->4->1 is smooth cyclic
 # motion so we "cut it out" and use it.
 print('create trajectory\n')
-traj = mstraj(segments, tsegment=[3, 0.25, 0.5, 0.25], dt=0.01, tacc=0.02)
+traj = mstraj(segments, tsegment=[3, 0.25, 0.5, 0.25], dt=0.01, tacc=0.2)
 print('inverse kinematics (this will take a moment)....', end='')
 
 xcycle = traj.q
