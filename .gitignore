@@ -262,6 +262,19 @@ Report/main.toc
 Report/main.out
 Report/Covers/*.aux
 
+ReportWalkingRobot/report.aux
+ReportWalkingRobot/report.bbl
+ReportWalkingRobot/report.bcf
+ReportWalkingRobot/report.blg
+ReportWalkingRobot/report.fdb_latexmk
+ReportWalkingRobot/report.fls
+ReportWalkingRobot/report.run.xml
+ReportWalkingRobot/report.synctex.gz
+ReportWalkingRobot/report.toc
+ReportWalkingRobot/report.out
+ReportWalkingRobot/Covers/*.aux
+
+
 # Stuff we notice that we don't want in the repository
 .python-version
 img/*
