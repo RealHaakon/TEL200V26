@@ -38,8 +38,8 @@ class WalkingRobot:
         print("Building qcycles, this may take a while...")
         
         # Durations
-        self._walk_duration = 0.25
-        self._turn_duration = 0.05
+        self._walk_duration = 0.1
+        self._turn_duration = 0.01
 
 
         self._walk_qcycle = self._createGaitCycle(self._walk_duration)
