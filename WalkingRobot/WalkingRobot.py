@@ -38,8 +38,8 @@ class WalkingRobot:
         print("Building qcycles, this may take a while...")
         
         # Durations
-        self._walk_duration = 1
-        self._turn_duration = 0.25
+        self._walk_duration = 0.05
+        self._turn_duration = 0.05
 
 
         self._walk_qcycle = self._createGaitCycle(self._walk_duration)
@@ -191,14 +191,17 @@ class WalkingRobot:
     def followPath(self, path):
         start = path[0]
         self.goto(start[0], start[1], self.angle)
-        for x, y in path:
+        
+        # Loop over every node in the path except the goal
+        for x, y in path[:-1]:
             dx = x - self.x
             dy = y - self.y
             
-
+            # Calculate numdbers of walking cycles
             dst = math.hypot(dx, dy)
             numWalks = round(dst / (100 * mm))
 
+            # Calculate number of turning cycles
             targetAngle = math.atan2(dy, dx)
             dtheta = targetAngle - self.angle
             dtheta = (dtheta + np.pi) % (2*np.pi) - np.pi
@@ -210,7 +213,7 @@ class WalkingRobot:
             clockwise = (numTurns < 0)
             for i in range(abs(numTurns)):
                 self.turn1deg(clockwise)
-                print(self.x, self.y)
+                print(f"Angle: {np.rad2deg(self.angle)}")
 
             for i in range(numWalks):
                 self.walk100mm()
@@ -260,6 +263,8 @@ class WalkingRobot:
                 break
 
             self.angle += rotation_step
+            
+            if (elapsed % 2 != 0): continue
             
             self._updatePose()
 
