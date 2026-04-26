@@ -214,7 +214,7 @@ phase offset per leg, and $N = 400$ is the total cycle length. For legs on the
 right-hand side, the sign of the first joint angle is flipped to mirror the
 motion symmetrically.
 
-For pose the robot is modelled as \textit{unicycle}, a common kinematic abstraction
+For global positioning the robot is modelled as \textit{unicycle}, a common kinematic abstraction
 for mobile robots moving on a planar surface. The robot pose is fully
 described by three states:
 
@@ -232,6 +232,57 @@ described by three states:
 where $x$ and $y$ are the position coordinates in the global reference frame
 and $\theta$ is the heading angle relative to the $x$-axis.
 
+\subsection{Motion Primitives}
+
+The global motion of the robot is constructed from two discrete motion
+primitives:
+
+\begin{itemize}
+    \item Forward translation of 10\,cm
+    \item In-place rotation of 1\degree
+\end{itemize}
+
+For forward motion, one complete gait cycle produces a net
+displacement of 10\,cm in the heading direction.
+For rotation, one gait cycle corresponds to a net change of 1\degree
+in orientation. Each primitive corresponds to one complete gait cycle in joint space.
+During forward motion, the robot base is incrementally translated along its
+current heading direction according to
+
+\begin{equation}
+x_{k+1} = x_k + \Delta s \cos\theta_k,
+\qquad
+y_{k+1} = y_k + \Delta s \sin\theta_k
+\end{equation}
+
+where $\Delta s$ is the incremental displacement per simulation step.
+
+For rotation, the heading angle is updated as
+
+\begin{equation}
+\theta_{k+1} = \theta_k + \Delta\theta
+\end{equation}
+
+Utilizing these motion primitives, we can achieve planar motion
+by combining forward and rotational steps. However since both
+translation and rotation are reduced to certain numbers, some loss of precision occurs.
+
+Forward motion is performed in steps of 100\,mm. This means the robot
+cannot move an exact distance smaller than 100\,mm. When approaching a
+waypoint, the maximum positional overshoot is therefore limited to
+approximately 50\,mm (half a step). Similarly, rotational motion is
+limited to integer degrees, making it impossible to represent
+non-integer heading angles exactly.
+
+Over longer paths, these small discretization effects may accumulate and
+cause deviation from the ideal continuous trajectory. To reduce this
+effect, the robot continuously tracks its position relative to the next
+node in the PRM path. Any small translational or angular overshoot is
+naturally corrected when aligning toward the following node.
+
+Although this approach reduces mobility resolution, the resulting error
+remains bounded and acceptable for the scale of the simulated
+environment.
 
 \subsection{Path Planning}
 
