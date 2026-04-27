@@ -264,6 +264,7 @@ class WalkingRobot:
 
             self.angle += rotation_step
             
+            # Skip every other frame in turn animation for perfomance reasons
             if (elapsed % 2 != 0): continue
             
             self._updatePose()
