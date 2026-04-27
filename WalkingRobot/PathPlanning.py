@@ -81,8 +81,8 @@ for i in range(5):
 
 
     # Plot start and goal points
-    current_start_dot = ax_map.plot(start[0], start[1], marker='o', color='green', markersize=8, zorder=15)
-    current_goal_dot = ax_map.plot(goal[0], goal[1], marker='o', color='red', markersize=8, zorder=15)
+    current_start_dot, = ax_map.plot(start[0], start[1], marker='o', color='green', markersize=8, zorder=15)
+    current_goal_dot, = ax_map.plot(goal[0], goal[1], marker='o', color='red', markersize=8, zorder=15)
 
         
     # Plot abd store path
