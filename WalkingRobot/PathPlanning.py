@@ -50,6 +50,10 @@ ax_map.set_ylim(0, floorplan.shape[0])
 robot_dot, = ax_map.plot([], [], color="g", markersize=4, zorder=10)
 robot_arrow = ax_map.quiver([], [], [], [], color='r', scale=20, zorder=5)
 
+# Start and end position
+current_start_dot = None
+current_goal_dot = None
+
 plt.show(block=False)
 
 # create robot
@@ -72,8 +76,15 @@ for i in range(5):
     # Remove previous path
     if current_path_line is not None:
         current_path_line.remove()
+        current_start_dot.remove()
+        current_goal_dot.remove()
 
-    
+
+    # Plot start and goal points
+    current_start_dot = ax_map.plot(start[0], start[1], marker='o', color='green', markersize=8, zorder=15)
+    current_goal_dot = ax_map.plot(goal[0], goal[1], marker='o', color='red', markersize=8, zorder=15)
+
+        
     # Plot abd store path
     current_path_line, = ax_map.plot(path[:,0], path[:,1], linewidth=2, color="b")
 
