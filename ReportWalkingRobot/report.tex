@@ -308,12 +308,23 @@ path is represented as an ordered list of via points:
     \mathbf{p} = \{\mathbf{p}_0,\ \mathbf{p}_1,\ \dots,\ \mathbf{p}_n\}
 \end{equation}
 
-Key limitations of PRM include non-guaranteed connectivity, poor coverage of
-narrow passages, and non-smooth paths. Its primary advantage is computational
-efficiency: once planned, only the cheap query phase must be repeated when the
-start or goal changes, making PRM well suited to high-dimensional planning
-problems.
+Let the robot pose be $(x_r, y_r, \theta_r)$ and the next waypoint
+$(x_t, y_t)$. The required walking and turning cycles are computed as
 
+\begin{equation}
+d = \sqrt{(x_t - x_r)^2 + (y_t - y_r)^2},
+\qquad
+N_{\text{walk}} = \mathrm{round}\!\left(\frac{d}{100\,\text{mm}}\right),
+\end{equation}
+
+\begin{equation}
+\Delta\theta =
+\left((\mathrm{atan2}(y_t - y_r, x_t - x_r) - \theta_r + \pi)
+\bmod 2\pi\right) - \pi,
+\qquad
+N_{\text{turn}} =
+\mathrm{round}\!\left(\frac{\Delta\theta}{1^\circ}\right).
+\end{equation}
 
 \subsection{Localization and Mapping}
 
@@ -368,13 +379,144 @@ paradigm in modern large-scale systems.
 \section{Results}
 % ============================================================
 
+\subsection{Motion Planning}
+The implemented crawl gait produced stable forward motion in the
+simulation. At all times, at least three legs remained in contact with
+the ground, ensuring static stability. No tipping or oscillatory
+instabilities were observed during straight-line walking.
+
+Each gait cycle resulted in an approximate forward displacement of
+100\,mm, as intended by the motion primitive design. Small deviations
+from the ideal displacement were observed due to numerical inverse
+kinematics and floating-point rounding, but these errors remained
+negligible over short distances.
+
+During in-place rotation, the robot achieved approximately $1^\circ$
+change in heading per gait cycle. Minor angular deviations accumulated
+over long sequences of rotations, consistent with the discretization
+effects discussed in Section~3.2. However, the angular error remained
+bounded and did not cause instability.
+
+When combining rotation and translation primitives, the robot was able
+to approximate arbitrary planar trajectories. Although the motion is
+piecewise discrete rather than continuous, the resulting path closely
+resembled the desired trajectory for the scale of the simulated
+environment.
+
+Overall, the motion primitive framework provided predictable and stable
+locomotion, with bounded discretization error that was acceptable for
+subsequent path-following tasks.
+
+
+\subsection{Path Planning}
+
+The PRM graph contains a parameter specifying the number of nodes in the
+roadmap. The objective is to determine a suitable node count for the given
+house map. If too few nodes are used, the graph may contain disconnected
+subgraphs (see Fig.~\ref{fig:prm_density}), causing large parts of the
+environment to become unreachable. On the other hand, using too many nodes
+increases computational cost and reduces performance.
+
+To determine a suitable value, one could use an analytical iterative
+approach. However, for this project an empirical approach was chosen,
+as it is sufficient for evaluating performance in a fixed environment.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM50.png}
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM100.png}
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM300.png}
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM1000.png}
+    \caption{Low node
+    counts result in disconnected components, while higher node counts
+    improve connectivity at the cost of computation time.}
+    \label{fig:prm_density}
+\end{figure}
+
+From Fig.~\ref{fig:prm_density}, it can be observed that 300 nodes provide
+sufficient connectivity throughout the house without producing
+disconnected subgraphs. This enables path planning between almost any two
+points in the environment while keeping computation time reasonable.
+
+Using the PRM planner with 300 nodes, five different paths were generated
+for the robot to follow, as shown in Fig.~\ref{fig:prm_paths}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 0.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 1.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 2.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 3.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 4.png}
+
+    \caption{Five example paths generated using the PRM with 300 nodes.}
+    \label{fig:prm_paths}
+\end{figure}
+
+To execute a planned path, the robot is first placed at the start
+coordinate using the custom \texttt{GOTO(x, y)} method in the
+\texttt{WalkingRobot} class. The robot continuously evaluates its own pose
+relative to the next waypoint in the path. This compensates for the
+accumulated discretization error introduced by the motion primitives
+described in Section~3.2.
+
+The robot executes the primitives sequentially: it first performs the
+required number of turning cycles, then executes the walking cycles.
+This process is repeated for each waypoint until the final node in the
+path is reached.
+
+\subsection{Localization and Mapping}
+
 
 % ============================================================
+
+% ============================================================
+
 \section{Discussion}
+\subsection{Motion Planning and Path Following}
+
+The implemented leg kinematics produced stable motion in simulation,
+but the movement occasionally appeared slightly irregular. While the
+model behaves consistently in the simulated environment, it is likely
+that a physical implementation would require more refined modeling,
+better dynamics handling, and feedback control to achieve smooth and
+realistic motion.
+
+A major limitation of the system is the use of only two motion
+primitives: 100\,mm forward translation and $1^\circ$ in-place rotation.
+Although this simplifies control, it significantly limits motion
+resolution. The robot cannot perform fine adjustments efficiently.
+For example, turning is slow because large rotations require many
+$1^\circ$ cycles. A more flexible primitive set (e.g., $30^\circ$,
+$10^\circ$, $5^\circ$, and $1^\circ$ rotations) would improve both
+speed and performance.
+
+During path execution, the robot was generally able to follow the
+planned paths. However, small overshoot and undershoot effects were
+observed due to discretization of motion. These errors remained bounded
+and were partially corrected when the robot aligned toward the next
+waypoint.
+
+The generated PRM paths were valid but not always smooth. Since the
+robot executes a turn-then-walk strategy at each waypoint, the overall
+motion becomes piecewise and slow, especially for paths with many
+nodes. Additionally, the PRM struggles in narrow rooms and near
+corners, where random sampling may fail to provide sufficient coverage.
+As a result, some regions close to walls are difficult or impossible
+to reach.
+
+Another limitation is the absence of collision detection during
+execution. While this was acceptable for the scope of the project and
+the static simulated environment, it would be problematic in a real
+robot operating in dynamic or uncertain environments.
+
+On the positive side, the system is modular and well structured.
+The separation between gait generation, motion primitives, and path
+planning makes it straightforward to replace the PRM algorithm or
+extend the motion primitive set. Despite its simplifications, the robot
+successfully completed all required tasks in the assignment.
 % ============================================================
 
-
-% ============================================================
 \section{Conclusions}
 % ============================================================
 
