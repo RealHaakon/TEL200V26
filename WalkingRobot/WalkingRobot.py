@@ -107,77 +107,68 @@ class WalkingRobot:
 
     def _createGaitCycle(self, duration):
         """
-        Stable quadruped gait cycle.
-        - 75% stance phase
-        - 25% swing phase
-        - Iterative IK for smooth joint motion
-        - Guarantees ≥3 legs on ground with 4-phase offsets
+        5-point rectangular gait cycle (Corke-style),
+        but solved with iterative IK using previous q as seed.
         """
 
         dt = 0.01
         n_frames = int(duration / dt)
 
-        # ---- Foot geometry (meters) ----
-        step_length = 0.10      # 10 cm forward/back
-        step_height = 0.03      # 3 cm lift
-        y_offset   = -0.05      # lateral offset
-        z_ground   = -0.05      # ground height
+        # ---- Geometry (same idea as old code) ----
+        x_f = 0.05      # 50 mm forward
+        x_b = -0.05     # 50 mm backward
+        y   = -0.05     # lateral offset
+        z_u = -0.02     # swing height
+        z_d = -0.05     # ground height
 
-        # ---- Gait timing ----
-        stance_ratio = 0.75
-        swing_ratio  = 0.25
+        segments = [
+            [x_f, y, z_d],
+            [x_b, y, z_d],
+            [x_b, y, z_u],
+            [x_f, y, z_u],
+            [x_f, y, z_d],
+        ]
+
+        segments = np.array(segments)
+
+        # segment durations (same structure as original PRM gait)
+        seg_time = np.array([3, 0.25, 0.5, 0.25, 0])  # last closes loop
+        seg_time = seg_time / seg_time.sum()
+
+        # frames per segment
+        seg_frames = (seg_time * n_frames).astype(int)
 
         q_cycle = []
-
-        # Initial IK guess (important for continuity)
         q_prev = np.array([0.0, 0.0, -0.8])
 
-        for k in range(n_frames):
+        for i in range(len(segments) - 1):
 
-            # phase variable [0, 1)
-            s = k / n_frames
+            p0 = segments[i]
+            p1 = segments[i + 1]
 
-            # ------------------------
-            # STANCE PHASE (75%)
-            # ------------------------
-            if s < stance_ratio:
+            for k in range(seg_frames[i]):
 
-                alpha = s / stance_ratio  # normalized [0,1]
+                alpha = k / max(seg_frames[i], 1)
 
-                # foot moves backward relative to body
-                x = step_length/2 - alpha * step_length
-                z = z_ground
+                # linear interpolation between keypoints
+                x = (1 - alpha) * p0[0] + alpha * p1[0]
+                y_pos = (1 - alpha) * p0[1] + alpha * p1[1]
+                z = (1 - alpha) * p0[2] + alpha * p1[2]
 
-            # ------------------------
-            # SWING PHASE (25%)
-            # ------------------------
-            else:
+                foot_pose = SE3(x, y_pos, z)
 
-                alpha = (s - stance_ratio) / swing_ratio  # normalized [0,1]
+                sol = self._leg_model.ikine_LM(
+                    foot_pose,
+                    q0=q_prev,
+                    mask=[1, 1, 1, 0, 0, 0]
+                )
 
-                # foot moves forward
-                x = -step_length/2 + alpha * step_length
-
-                # smooth sinusoidal lift
-                z = z_ground + step_height * np.sin(np.pi * alpha)
-
-            # Desired foot pose
-            foot_pose = SE3(x, y_offset, z)
-
-            # Solve IK with previous solution as initial guess
-            sol = self._leg_model.ikine_LM(
-                foot_pose,
-                q0=q_prev,
-                mask=[1, 1, 1, 0, 0, 0]
-            )
-
-            q = sol.q
-            q_cycle.append(q)
-
-            # Critical for continuity
-            q_prev = q
+                q = sol.q
+                q_cycle.append(q)
+                q_prev = q
 
         return np.array(q_cycle)
+    
 
     def _gait(self, cycle, elapsed, offset, reversed):
         
