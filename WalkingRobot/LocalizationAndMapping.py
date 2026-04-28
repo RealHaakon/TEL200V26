@@ -61,8 +61,8 @@ def modified_scanmap(posegraph, occgrid, maxrange=None, M=10):
         bar.next()
     bar.finish()
 
-    grid1d[grid1d < M] = 0
-    grid1d[grid1d >= M] = 1
+    grid1d[grid1d <= M] = 1
+    grid1d[grid1d > M] = 0
     bar.finish()
     return rtb.BinaryOccupancyGrid(
         grid=occgrid.grid,
@@ -88,12 +88,12 @@ def prmplanning(occgrid, npoints=300):
     plt.show()
 
 
-def dstarplanning(occgrid):
+def dstarplanning(occgrid, start, goal):
     dstar = rtb.DstarPlanner(occgrid=occgrid)
     print("Planning")
-    dstar.plan(goal=(120, 190))
+    dstar.plan(goal=goal)
     print("Finding path")
-    path, status = dstar.query(start=(65, 150))
+    path, status = dstar.query(start=start)
     dstar.plot(path)
     plt.show()
 
@@ -112,7 +112,7 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
     open_nodes = {start: (g_start, h_start, f_start, None)}
     closed_nodes = {}
 
-    # See that iterations happe and how close the current node is to goal
+    # See that iterations happen and how close the current node is to goal
     pbar = tqdm(total=f_start, desc="Planning, Distance to target: ")
 
     while open_nodes:
@@ -120,11 +120,11 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
         lowestf = float('inf')
         # Makes the current node the one with the lowest
         # heuristically estimated distance to target
-        for tentative_coord, values in open_nodes.items():
+        for tent_coord, values in open_nodes.items():
             g, h, f, parent = values
-            if f < lowestf and occgrid.grid[tentative_coord] == 0:
+            if f < lowestf and occgrid.grid[tent_coord] == 0:
                 lowestf = f
-                coord = tentative_coord
+                coord = tent_coord
 
         g, h, f, parent = open_nodes[coord]
 
@@ -132,10 +132,10 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
         # back to start through node parents
         if coord == goal:
             pbar.close()
-            path = [coord]
+            path = [occgrid.g2w(coord)]
             while parent is not None:
                 path.append(occgrid.g2w(parent))
-                parent = closed_nodes[parent][-1]
+                g, h, f, parent = closed_nodes[parent]
             path.reverse()
             return path
 
@@ -158,6 +158,9 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
         for nghx, nghy in nghcoords:
             if (nghx, nghy) in closed_nodes:
                 # Already evaluated
+                continue
+            if occgrid.grid[(nghx, nghy)] == 1:
+                # Hit a wall
                 continue
             ngh_g = g + 1
             if (nghx, nghy) in open_nodes:
@@ -184,11 +187,9 @@ def main():
         )
     pg = rtb.PoseGraph("data/killian.g2o.zip", lidar=True)
     killian = modified_scanmap(pg, occgrid=og, maxrange=50, M=10)
-    path = astarplanning(killian, (65, 150), (55, 160))
-    # killian.plot()
-    plt.plot(path)
-    plt.show()
+    dstarplanning(killian, (128, 243), (199, 259))
 
 
 if __name__ == "__main__":
+    # path = astarplanning(killian, (65, 150), (55, 160))
     main()
