@@ -563,8 +563,7 @@ are as follows given in red lines:
 \section{Discussion}
 \subsection{Motion Planning and Path Following}
 
-The implemented leg kinematics produced stable motion in simulation,
-but the movement occasionally appeared slightly irregular. While the
+The implemented leg kinematics produced stable motion in simulation. While the
 model behaves consistently in the simulated environment, it is likely
 that a physical implementation would require more refined modeling,
 better dynamics handling, and feedback control to achieve smooth and
@@ -574,7 +573,7 @@ A major limitation of the system is the use of only two motion
 primitives: 100\,mm forward translation and $1^\circ$ in-place rotation.
 Although this simplifies control, it significantly limits motion
 resolution. The robot cannot perform fine adjustments efficiently.
-For example, turning is slow because large rotations require many
+Turning is slow because large rotations require many
 $1^\circ$ cycles. A more flexible primitive set (e.g., $30^\circ$,
 $10^\circ$, $5^\circ$, and $1^\circ$ rotations) would improve both
 speed and performance.
@@ -587,18 +586,13 @@ waypoint.
 
 The generated PRM paths were valid but not always smooth. Since the
 robot executes a turn-then-walk strategy at each waypoint, the overall
-motion becomes piecewise and slow, especially for paths with many
-nodes. Additionally, the PRM struggles in narrow rooms and near
+motion becomes piecewise and slow. Additionally, the PRM struggles in narrow rooms and near
 corners, where random sampling may fail to provide sufficient coverage.
 As a result, some regions close to walls are difficult or impossible
-to reach.
+to reach. However as a side bonus this can make up for the absence of collision detection,
+by making the robot less likely to walk near walls and corners.
 
-Another limitation is the absence of collision detection during
-execution. While this was acceptable for the scope of the project and
-the static simulated environment, it would be problematic in a real
-robot operating in dynamic or uncertain environments.
-
-On the positive side, the system is modular and well structured.
+In general the system is modular and well structured.
 The separation between gait generation, motion primitives, and path
 planning makes it straightforward to replace the PRM algorithm or
 extend the motion primitive set. Despite its simplifications, the robot
