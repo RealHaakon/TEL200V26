@@ -141,6 +141,8 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
             occgrid.plot(cmap="gray")
             x_coords, y_coords = zip(*path)
             plt.plot(x_coords, y_coords, linewidth=3)
+            plt.plot(path[0][0], path[0][1], "bo")  # Startpoint
+            plt.plot(path[-1][0], path[-1][1], "go")  # Endpoint
             plt.show()
             return
 
