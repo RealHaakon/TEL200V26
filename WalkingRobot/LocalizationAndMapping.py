@@ -116,14 +116,14 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
     # See that iterations happen and how close the current node is to goal
     pbar = tqdm(total=f_start, desc="Planning, Distance to target: ")
 
-    while len(open_nodes) != 0:
+    while len(open_nodes) > 0:
         coord = None
         lowestf = float('inf')
         # Makes the current node the one with the lowest
         # heuristically estimated distance to target
         for tent_coord, values in open_nodes.items():
             g, h, f, parent = values
-            if f < lowestf and occgrid.grid[tent_coord] == 0:
+            if f < lowestf:
                 lowestf = f
                 coord = tent_coord
 
@@ -160,8 +160,12 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
             if (nghx, nghy) in closed_nodes:
                 # Already evaluated
                 continue
-            if occgrid.grid[(nghx, nghy)] == 1:
+            if occgrid.grid[(nghy, nghx)]:
                 # Hit a wall
+                continue
+            if not (0 <= nghx < occgrid.grid.shape[1] and
+               0 <= nghy < occgrid.grid.shape[0]):
+                # Out of bounds
                 continue
             ngh_g = g + 1
             if (nghx, nghy) in open_nodes:
@@ -173,9 +177,9 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
             ngh_h = abs(nghx - goal_x) + abs(nghy - goal_y)
             ngh_f = ngh_g + ngh_h
             open_nodes[(nghx, nghy)] = (ngh_g, ngh_h, ngh_f, coord)
-        pbar.reset()
-        pbar.update(f)
+        pbar.update(1)
     # Never reached goal
+    pbar.close()
     print("Path not found")
     return None
 
@@ -188,20 +192,19 @@ def main():
         )
     pg = rtb.PoseGraph("data/killian.g2o.zip", lidar=True)
     killian = modified_scanmap(pg, occgrid=og, maxrange=50, M=10)
-    # path = astarplanning(killian, (28, 143), (99, 159))
-    zeroes = np.argwhere(killian.grid == 0)
 
     row, column = np.where(killian.grid == False)
     indexes = list(zip(column, row))
     rd.shuffle(indexes)
 
-    start = killian.g2w(indexes[0])
-    goal = killian.g2w(indexes[1])
+    start = tuple(killian.g2w(indexes[0]).tolist())
+    goal = tuple(killian.g2w(indexes[1]).tolist())
 
-    print(start, goal)
-
-    dstarplanning(killian, start, goal)
-    # plt.plot(path)
+    path = astarplanning(killian, start, goal)
+    killian.plot(cmap="gray")
+    x_coords, y_coords = zip(*path)
+    plt.plot(x_coords, y_coords, linewidth=3)
+    plt.show()
 
 
 if __name__ == "__main__":
