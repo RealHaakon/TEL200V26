@@ -77,8 +77,6 @@ sorting=ynt
 }
 
 \tableofcontents
-\newpage
-
 
 % ============================================================
 \section{Abstract}
@@ -333,46 +331,6 @@ is (localization) and knowing what the environment looks like (mapping). These
 problems are deeply interdependent --- a map is needed for accurate
 localization, while a reliable pose estimate is needed to build a map
 \cite{Corke2023}.
-
-Localization estimates the robot's pose
-$\mathbf{x}_v = (x_v,\, y_v,\, \theta_v)^T$ over time. \textit{Dead
-reckoning} propagates the pose using odometry alone, but errors accumulate
-without bound. When a landmark map is available, sensor observations correct
-the estimate. The Extended Kalman Filter (EKF) linearizes the nonlinear motion
-and observation models via the Jacobian and is optimal for Gaussian noise. For
-non-Gaussian or multi-modal distributions, the Particle Filter (PF) maintains
-a set of weighted pose hypotheses at higher computational cost.
-
-When the robot pose is assumed known, landmark positions can be estimated using
-an EKF. The state vector grows as new landmarks are observed:
-
-\begin{equation}
-    \hat{\mathbf{x}} = (x_1,\, y_1,\, x_2,\, y_2,\, \cdots,\, x_M,\, y_M)^T
-    \in \mathbb{R}^{2M \times 1}
-\end{equation}
-
-Since landmarks are stationary, the prediction step is static
-($\hat{\mathbf{x}}^+\langle k{+}1\rangle = \hat{\mathbf{x}}\langle k\rangle$).
-Observing one landmark provides no information about any other, so the
-covariance matrix remains block-diagonal.
-
-When neither pose nor map is known, SLAM must be performed. EKF-SLAM augments
-the state vector to jointly estimate both:
-
-\begin{equation}
-    \hat{\mathbf{x}} = (x_v,\, y_v,\, \theta_v,\, x_1,\, y_1,\, \cdots,\,
-    x_M,\, y_M)^T \in \mathbb{R}^{(2M+3) \times 1}
-\end{equation}
-
-The Kalman gain distributes innovation from each landmark observation across
-the full state vector, coupling pose and map estimates. However, the covariance
-matrix grows quadratically with the number of landmarks, making EKF-SLAM
-expensive for large environments. Rao-Blackwellized FastSLAM mitigates this by
-using a Particle Filter for pose estimation and an independent EKF per particle
-for mapping, reducing complexity from $\mathcal{O}(N^2)$ to
-$\mathcal{O}(M \log N)$. Graph-based SLAM represents the problem as a sparse
-pose graph and solves it as a least-squares optimization, and is the dominant
-paradigm in modern large-scale systems.
 
 With the lidar data provided by the robot, we can map the area onto an occupancy grid in python
 using the scanmap() method.
