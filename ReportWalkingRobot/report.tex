@@ -225,34 +225,19 @@ and $\theta$ is the heading angle relative to the $x$-axis.
 
 \subsection{Motion Primitives}
 
-The global motion of the robot is constructed from two discrete motion
-primitives:
-
-\begin{itemize}
-    \item Forward translation of 10\,cm
-    \item In-place rotation of 1\degree
-\end{itemize}
-
-For forward motion, one complete gait cycle produces a net
-displacement of 10\,cm in the heading direction.
-For rotation, one gait cycle corresponds to a net change of 1\degree
-in orientation. Each primitive corresponds to one complete gait cycle in joint space.
-During forward motion, the robot base is incrementally translated along its
-current heading direction according to
+The global motion of the robot is defined by two discrete motion primitives for
+forward translation of 10cm, and in-place rotation of 1\degree. Each primitive
+corresponds to one full gait cycle. A forward cycle produces a 10cm 
+displacement in the current heading direction, while a rotation cycle changes
+ the orientation by 1\degree. The robot pose is updated using the unicycle model.
 
 \begin{equation}
-x_{k+1} = x_k + \Delta s \cos\theta_k,
-\qquad
-y_{k+1} = y_k + \Delta s \sin\theta_k
-\end{equation}
-
-where $\Delta s$ is the incremental displacement per simulation step.
-
-For rotation, the heading angle is updated as
-
-\begin{equation}
+x_{k+1} = x_k + \Delta s \cos\theta_k,\qquad
+y_{k+1} = y_k + \Delta s \sin\theta_k,\qquad
 \theta_{k+1} = \theta_k + \Delta\theta
 \end{equation}
+
+
 
 Utilizing these motion primitives, we can achieve planar motion
 by combining forward and rotational steps. However since both
@@ -349,7 +334,7 @@ lidar scans confirm a cell is free, the cell has value $0$, otherwise $1$, a few
     \item The decrementation of cells needs to be removed, as the task description states that a cell is free if more than $M$
     rays pass through it, not if at least $M$ more rays pass through than don't.
     \item In the original implementation it only goes through $20\%$ of the rays. This needs to be modified to go
-    through all rays in order to avoid mistakenly classifying a cell as free because it didn't scan enough rays hitting a wall.
+    through all rays.
 \end{itemize} 
 The implementation of these modifications is given as follows:
 \begin{figure}[H]
@@ -420,13 +405,8 @@ Each gait cycle resulted in an approximate forward displacement of
 100\,mm, as intended by the motion primitive design. Small deviations
 from the ideal displacement were observed due to numerical inverse
 kinematics and floating-point rounding, but these errors remained
-negligible over short distances.
-
-During in-place rotation, the robot achieved approximately $1^\circ$
-change in heading per gait cycle. Minor angular deviations accumulated
-over long sequences of rotations, consistent with the discretization
-effects discussed in Section~3.2. However, the angular error remained
-bounded and did not cause instability.
+negligible over short distances. The turning was also affected by
+floating point precision errors, however the angular error did not cause instability.
 
 When combining rotation and translation primitives, the robot was able
 to approximate arbitrary planar trajectories. Although the motion is
