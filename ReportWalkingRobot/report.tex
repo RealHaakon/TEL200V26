@@ -76,23 +76,18 @@ sorting=ynt
   }%
 }
 
-\tableofcontents
-
 % ============================================================
 \section{Abstract}
 % ============================================================
-
+This report concerns the design and implementation of a simulated quadruped
+walking robot. The project covers three main topics: motion planning for
+coordinated leg movement, path planning for navigation, and
+localization and mapping based on real lidar data. Together, these form the
+core components of an autonomous robotic system.
 
 % ============================================================
 \section{Introduction}
 % ============================================================
-
-This report concerns the design and implementation of a simulated quadruped
-walking robot. The project covers three main topics: motion planning for
-coordinated leg movement, path planning for obstacle-free navigation, and
-localization and mapping for situational awareness. Together, these form the
-core components of an autonomous robotic system.
-
 \subsection{Motion Planning}
 
 A quadruped walking robot requires coordinated control of four legs, each
@@ -134,7 +129,7 @@ makes point contact with the ground and orientation is not critical
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=5cm]{images/Leg.png}
+    \includegraphics[height=3cm]{images/Leg.png}
     \caption{Illustration of frame and axis rotations for the simple leg
     \cite{Corke2023}}
 \end{figure}
@@ -165,7 +160,7 @@ gait}).
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=7cm]{images/TrajectoryAndMotion.png}
+    \includegraphics[height=4cm]{images/TrajectoryAndMotion.png}
     \caption{Trajectory of a single foot and motion of each leg
     \cite{Corke2023}}
 \end{figure}
@@ -220,7 +215,7 @@ described by three states:
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=5cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
+    \includegraphics[height=3cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
     \caption{Illustration of pose using unicycle model
     \cite{Unicycle_model}}
 \end{figure}
@@ -357,25 +352,20 @@ lidar scans confirm a cell is free, the cell has value $0$, otherwise $1$, a few
     through all rays in order to avoid mistakenly classifying a cell as free because it didn't scan enough rays hitting a wall.
 \end{itemize} 
 The implementation of these modifications is given as follows:
-
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{.3\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/Modified_scanmap1.png}
-        \caption{Modified scanmap() part 1}
-    \end{minipage}
-    \begin{minipage}{.3\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/Modified_scanmap2.png}
-        \caption{Modified scanmap() part 2}
-    \end{minipage}
-    \begin{minipage}{.3\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/Modified_scanmap3.png}
-        \caption{Modified scanmap() part 3}
-    \end{minipage}
+\centering
+    \subcaptionbox{Modified scanmap() part 1}[0.2\linewidth]{
+        \includegraphics[width=4cm]{images/Modified_scanmap1.png}
+    }\hfill
+    \subcaptionbox{Modified scanmap() part 2}[0.2\linewidth]{
+        \includegraphics[width=4cm]{images/Modified_scanmap2.png}
+    
+    }\hfill
+    \subcaptionbox{Modified scanmap() part 3}[0.2\linewidth]{
+        \includegraphics[width=4cm]{images/Modified_scanmap3.png}    
+    }
 \end{figure}
+
 
 To implement a PRM path-planner for the free space in this occupancy grid, we create a PRMPlanner object
 linked to the binary occupancy grid from modified\_scanmap. Because there is a lot of free space outside the
@@ -480,18 +470,20 @@ path is reached.
 
 \subsection{Localization and mapping}
 Result of modified\_scanmap:
+
+
+
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=.5\textwidth]{images/KillianMap.png}
-    \caption{KillianMap}
+\centering
+    \subcaptionbox{KillianMap}[0.48\linewidth]{
+        \includegraphics[height=5cm]{images/KillianMap.png}
+    }\hfill
+    \subcaptionbox{PRM-planning in KillianMap}[0.48\linewidth]{
+        \includegraphics[height=5cm]{images/PRMPlotTask3.png}
+    }
 \end{figure}
 
-Result of prm path planning:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.5\textwidth]{images/PRMPlotTask3.png}
-    \caption{PRM-planning in KillianMap}
-\end{figure}
+Result of prm path planning
 
 % ============================================================
 
@@ -542,7 +534,6 @@ extend the motion primitive set. Despite its simplifications, the robot
 successfully completed all required tasks in the assignment.
 % ============================================================
 
-\section{Conclusions}
 % ============================================================
 
 
