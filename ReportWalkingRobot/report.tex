@@ -160,7 +160,7 @@ gait}).
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=4cm]{images/TrajectoryAndMotion.png}
+    \includegraphics[height=3.5cm]{images/TrajectoryAndMotion.png}
     \caption{Trajectory of a single foot and motion of each leg
     \cite{Corke2023}}
 \end{figure}
@@ -215,7 +215,7 @@ described by three states:
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=3cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
+    \includegraphics[height=2.5cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
     \caption{Illustration of pose using unicycle model
     \cite{Unicycle_model}}
 \end{figure}
@@ -325,16 +325,13 @@ if the cell's value is positive, it is assumed to be free space, and the value i
 To modify the scanmap() method to arrive at a binary occupancy grid, where if more than $M$
 lidar scans confirm a cell is free, the cell has value $0$, otherwise $1$, a few steps were taken:
 \begin{itemize}
-    \item The final step in the scanmap() method needs to be modified for a threshold of $M$ rather than
-    $0$.
-    \item The final step in the scanmap() method needs to clamp the values to $0$ and $1$ instead of $-1$ and $1$.
-    This is to make it actually binary.
-    \item The final step in the scanmap() method needs to be extended to wrap the grid of the occupancy grid in a
-    binary occupancy grid, and then return it.
     \item The decrementation of cells needs to be removed, as the task description states that a cell is free if more than $M$
     rays pass through it, not if at least $M$ more rays pass through than don't.
     \item In the original implementation it only goes through $20\%$ of the rays. This needs to be modified to go
     through all rays.
+    \item The final step in the scanmap() method needs to be modified for a threshold of $M$ rather than
+    $0$. The clamp in the final step also needs to be modified to clamp to $0$ and $1$ to make it binary.
+    And the final step also needs to be modified to return a binary occupancy grid.
 \end{itemize} 
 The implementation of these modifications is given as follows:
 \begin{figure}[H]
@@ -478,7 +475,7 @@ path is reached.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.6\textwidth]{images/PathFollowing.png}
+    \includegraphics[width=.5\textwidth]{images/PathFollowing.png}
     \caption{Walking robot following a path}
 \end{figure}
 
