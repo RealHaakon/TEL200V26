@@ -469,9 +469,6 @@ path is reached.
 \end{figure}
 
 \subsection{Localization and mapping}
-Result of modified\_scanmap:
-
-
 
 \begin{figure}[H]
 \centering
@@ -496,9 +493,23 @@ Result of modified\_scanmap:
         \includegraphics[height=2.5cm]{images/KillianMap/prm_1000pt.png}
     }
 
+    
+\caption{Killian map binary occupancy grid and PRM graphs}
+\label{fig:prmKillian}
 \end{figure}
 
-Result of prm path planning
+From Fig.~\ref{fig:prmKillian}, the binary occupancy grid produced by the
+modified scanmap() method captures the main structure of the Killian hallways.
+Walls are clearly defined, and the free space inside corridors is visible.
+This indicates that the lidar processing and thresholding approach works
+as intended for generating a usable map representation.
+
+
+From the PRM map attempts it can also be observed that even with a huge amount
+of nodes, the PRM is still unable to provide sufficient connectivity throughout 
+the Killian halways. This drastically increases the chance of an error when attempting to 
+plan a path between two points in the environment. 
+
 
 % ============================================================
 
