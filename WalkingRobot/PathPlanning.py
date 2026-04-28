@@ -6,7 +6,7 @@ from WalkingRobot import WalkingRobot
 
 rd.seed(80085)
 
-def updateMapPosition(x, y, angle):
+def DrawRobotOnMap(x, y, angle):
     # convert meters → cm (map is in cm)
     x_cm = x * 100
     y_cm = y * 100
@@ -58,7 +58,7 @@ plt.show(block=False)
 
 # create robot
 robot = WalkingRobot()
-robot.debug_callback = updateMapPosition
+robot.debug_callback = DrawRobotOnMap
 
 
 # Create random paths. We interpreted a nested path A->B->C->D... -> Z, as a logical solution,
