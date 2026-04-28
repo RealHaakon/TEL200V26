@@ -103,32 +103,36 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
     # {Coordinate: (g(n), h(n), f(n), parent_coordinate)}
     start = tuple(occgrid.w2g(start).tolist())  # Convert to grid coords
     goal = tuple(occgrid.w2g(goal).tolist())  # Convert to grid coords
+    goal_x, goal_y = goal
+    start_x, start_y = start
     g_start = 0  # The cost to move from start to start is zero
     # Manhattan distance heuristic
-    h_start = abs(start[0] - goal[0]) + abs(start[1] - goal[1])
+    h_start = abs(start_x - goal_x) + abs(start_y - goal_y)
     f_start = g_start + h_start  # Estimated travel cost to target
     open_nodes = {start: (g_start, h_start, f_start, None)}
     closed_nodes = {}
 
-    pbar = tqdm(desc="Planning")  # See that iterations happen
+    # See that iterations happe and how close the current node is to goal
+    pbar = tqdm(total=f_start, desc="Planning, Distance to target: ")
 
     while open_nodes:
-        current = None
+        coord = None
         lowestf = float('inf')
         # Makes the current node the one with the lowest
         # heuristically estimated distance to target
-        for coord, values in open_nodes.items():
-            node = (coord,) + values
-            if node[3] < lowestf and occgrid.grid[coord] == 0:
-                lowestf = node[3]
-                current = node
+        for tentative_coord, values in open_nodes.items():
+            g, h, f, parent = values
+            if f < lowestf and occgrid.grid[tentative_coord] == 0:
+                lowestf = f
+                coord = tentative_coord
+
+        g, h, f, parent = open_nodes[coord]
 
         # Reached goal, constructs path by recursively going
         # back to start through node parents
-        if current[0] == goal:
+        if coord == goal:
             pbar.close()
-            path = [current[0]]
-            parent = current[-1]
+            path = [coord]
             while parent is not None:
                 path.append(occgrid.g2w(parent))
                 parent = closed_nodes[parent][-1]
@@ -136,10 +140,10 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
             return path
 
         # Moves current node from open to closed
-        closed_nodes[current[0]] = current[1:]
-        del open_nodes[current[0]]
+        closed_nodes[coord] = (g, h, f, parent)
+        del open_nodes[coord]
 
-        x, y = current[0]
+        x, y = coord
         # Does not include diagonals
         nghcoords = [
             (x, y+1),
@@ -155,16 +159,18 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
             if (nghx, nghy) in closed_nodes:
                 # Already evaluated
                 continue
-            g = current[1] + 1
+            ngh_g = g + 1
             if (nghx, nghy) in open_nodes:
-                if g >= open_nodes[nghx, nghy][0]:
+                tent_g, tent_h, tent_f, tent_parent = open_nodes[(nghx, nghy)]
+                if ngh_g >= tent_g:
                     # Not a better path
                     continue
             # Manhattan distance heuristic
-            h = abs(nghx - goal[0]) + abs(nghy - goal[1])
-            f = g + h
-            open_nodes[(nghx, nghy)] = (g, h, f, current[0])
-        pbar.update(1)
+            ngh_h = abs(nghx - goal_x) + abs(nghy - goal_y)
+            ngh_f = ngh_g + ngh_h
+            open_nodes[(nghx, nghy)] = (ngh_g, ngh_h, ngh_f, coord)
+        pbar.reset()
+        pbar.update(f)
     # Never reached goal
     print("Path not found")
     return None
@@ -179,7 +185,7 @@ def main():
     pg = rtb.PoseGraph("data/killian.g2o.zip", lidar=True)
     killian = modified_scanmap(pg, occgrid=og, maxrange=50, M=10)
     path = astarplanning(killian, (65, 150), (55, 160))
-    killian.plot()
+    # killian.plot()
     plt.plot(path)
     plt.show()
 
