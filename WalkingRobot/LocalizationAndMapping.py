@@ -115,7 +115,7 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
     # See that iterations happen and how close the current node is to goal
     pbar = tqdm(total=f_start, desc="Planning, Distance to target: ")
 
-    while open_nodes:
+    while len(open_nodes) != 0:
         coord = None
         lowestf = float('inf')
         # Makes the current node the one with the lowest
@@ -187,7 +187,12 @@ def main():
         )
     pg = rtb.PoseGraph("data/killian.g2o.zip", lidar=True)
     killian = modified_scanmap(pg, occgrid=og, maxrange=50, M=10)
-    dstarplanning(killian, (128, 243), (199, 259))
+    # path = astarplanning(killian, (28, 143), (99, 159))
+    zeroes = np.argwhere(killian.grid == 0)
+    start = zeroes[np.random.randint(len(zeroes))]
+    goal = zeroes[np.random.randint(len(zeroes))]
+    dstarplanning(killian, start, goal)
+    # plt.plot(path)
 
 
 if __name__ == "__main__":
