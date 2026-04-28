@@ -138,7 +138,11 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
                 path.append(occgrid.g2w(parent))
                 g, h, f, parent = closed_nodes[parent]
             path.reverse()
-            return path
+            occgrid.plot(cmap="gray")
+            x_coords, y_coords = zip(*path)
+            plt.plot(x_coords, y_coords, linewidth=3)
+            plt.show()
+            return
 
         # Moves current node from open to closed
         closed_nodes[coord] = (g, h, f, parent)
@@ -181,7 +185,6 @@ def astarplanning(occgrid: rtb.OccupancyGrid, start, goal):
     # Never reached goal
     pbar.close()
     print("Path not found")
-    return None
 
 
 def main():
@@ -200,11 +203,7 @@ def main():
     start = tuple(killian.g2w(indexes[0]).tolist())
     goal = tuple(killian.g2w(indexes[1]).tolist())
 
-    path = astarplanning(killian, start, goal)
-    killian.plot(cmap="gray")
-    x_coords, y_coords = zip(*path)
-    plt.plot(x_coords, y_coords, linewidth=3)
-    plt.show()
+    astarplanning(killian, start, goal)
 
 
 if __name__ == "__main__":
