@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from progress.bar import FillingCirclesBar
 from tqdm import tqdm
 from spatialmath import SE2
+import random as rd
 
 
 def modified_scanmap(posegraph, occgrid, maxrange=None, M=10):
@@ -189,8 +190,16 @@ def main():
     killian = modified_scanmap(pg, occgrid=og, maxrange=50, M=10)
     # path = astarplanning(killian, (28, 143), (99, 159))
     zeroes = np.argwhere(killian.grid == 0)
-    start = killian.g2w(zeroes[np.random.randint(len(zeroes))])
-    goal = killian.g2w(zeroes[np.random.randint(len(zeroes))])
+
+    row, column = np.where(killian.grid == False)
+    indexes = list(zip(column, row))
+    rd.shuffle(indexes)
+
+    start = killian.g2w(indexes[0])
+    goal = killian.g2w(indexes[1])
+
+    print(start, goal)
+
     dstarplanning(killian, start, goal)
     # plt.plot(path)
 
