@@ -189,12 +189,11 @@ def main():
     killian = modified_scanmap(pg, occgrid=og, maxrange=50, M=10)
     # path = astarplanning(killian, (28, 143), (99, 159))
     zeroes = np.argwhere(killian.grid == 0)
-    start = zeroes[np.random.randint(len(zeroes))]
-    goal = zeroes[np.random.randint(len(zeroes))]
+    start = killian.g2w(zeroes[np.random.randint(len(zeroes))])
+    goal = killian.g2w(zeroes[np.random.randint(len(zeroes))])
     dstarplanning(killian, start, goal)
     # plt.plot(path)
 
 
 if __name__ == "__main__":
-    # path = astarplanning(killian, (65, 150), (55, 160))
     main()
