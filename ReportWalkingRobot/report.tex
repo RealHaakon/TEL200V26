@@ -355,14 +355,14 @@ The implementation of these modifications is given as follows:
 \begin{figure}[H]
 \centering
     \subcaptionbox{Modified scanmap() part 1}[0.2\linewidth]{
-        \includegraphics[width=4cm]{images/Modified_scanmap1.png}
+        \includegraphics[width=4cm]{images/KillianMap/scanmap1.png}
     }\hfill
     \subcaptionbox{Modified scanmap() part 2}[0.2\linewidth]{
-        \includegraphics[width=4cm]{images/Modified_scanmap2.png}
+        \includegraphics[width=4cm]{images/KillianMap/scanmap2.png}
     
     }\hfill
     \subcaptionbox{Modified scanmap() part 3}[0.2\linewidth]{
-        \includegraphics[width=4cm]{images/Modified_scanmap3.png}    
+        \includegraphics[width=4cm]{images/KillianMap/scanmap3.png}    
     }
 \end{figure}
 
@@ -370,12 +370,6 @@ The implementation of these modifications is given as follows:
 To implement a PRM path-planner for the free space in this occupancy grid, we create a PRMPlanner object
 linked to the binary occupancy grid from modified\_scanmap. Because there is a lot of free space outside the
 intended area, npoints is set rather high in order to make proper coverage of the intended area more probable.
-Implementation of the PRM path-planner is given by the following code:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.6\textwidth]{images/PRMCodeTask3.png}
-\end{figure}
-
 An alternative path planning algorithm that can be more efficient than PRM is $D^*$.
 
 % ============================================================
@@ -475,12 +469,27 @@ Result of modified\_scanmap:
 
 \begin{figure}[H]
 \centering
-    \subcaptionbox{KillianMap}[0.48\linewidth]{
-        \includegraphics[height=5cm]{images/KillianMap.png}
+    \subcaptionbox{KillianMap}[0.2\linewidth]{
+        \includegraphics[width=2cm]{images/KillianMap/KillianMap.png}
     }\hfill
-    \subcaptionbox{PRM-planning in KillianMap}[0.48\linewidth]{
-        \includegraphics[height=5cm]{images/PRMPlotTask3.png}
+    \subcaptionbox{PRM n=50}[0.2\linewidth]{
+        \includegraphics[width=2cm]{images/KillianMap/prm_50pt.png}
     }
+    \hfill
+    \subcaptionbox{PRM n=150}[0.2\linewidth]{
+        \includegraphics[width=2cm]{images/KillianMap/prm_150pt.png}
+    }
+    \hfill
+    \subcaptionbox{PRM n=300}[0.2\linewidth]{
+        \includegraphics[width=2cm]{images/KillianMap/prm_300pt.png}
+    }\hfill
+    \subcaptionbox{PRM n=500}[0.2\linewidth]{
+        \includegraphics[width=2cm]{images/KillianMap/prm_500pt.png}
+    }\hfill
+    \subcaptionbox{PRM n=1000}[0.2\linewidth]{
+        \includegraphics[width=2cm]{images/KillianMap/prm_1000pt.png}
+    }
+
 \end{figure}
 
 Result of prm path planning
