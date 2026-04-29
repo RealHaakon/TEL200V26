@@ -62,8 +62,6 @@ sorting=ynt
     {\Large\bfseries Authors}\\[0.3cm]
     {\large Andreas Brustad \\ Johannes Standal \\ Håkon Bekken}\\[1cm]
 
-    \vfill
-
     \small Norwegian University of Life Sciences
 \end{titlepage}
 
@@ -83,7 +81,8 @@ This report concerns the design and implementation of a simulated quadruped
 walking robot. The project covers three main topics: motion planning for
 coordinated leg movement, path planning for navigation, and
 localization and mapping based on real lidar data. Together, these form the
-core components of an autonomous robotic system.
+core components of an autonomous robotic system. \\
+Project links: \cite{walkingvideo}, \cite{github}
 
 % ============================================================
 \section{Introduction}
@@ -127,7 +126,7 @@ makes point contact with the ground and orientation is not critical.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=3cm]{images/Leg.png}
+    \includegraphics[height=2.5cm]{images/Leg.png}
     \caption{Illustration of frame and axis rotations for the simple leg
     (\cite{Corke2023})}
 \end{figure}
@@ -290,7 +289,6 @@ d = \sqrt{(x_t - x_r)^2 + (y_t - y_r)^2},
 \qquad
 N_{\text{walk}} = \mathrm{round}\!\left(\frac{d}{100\,\text{mm}}\right),
 \end{equation}
-
 \begin{equation}
 \Delta\theta =
 \left((\mathrm{atan2}(y_t - y_r, x_t - x_r) - \theta_r + \pi)
