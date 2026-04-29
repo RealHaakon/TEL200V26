@@ -1,0 +1,10 @@
+[project]
+name = "tel200v26"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rvc3python>=0.9.2",
+    "tqdm>=4.67.3",
+]

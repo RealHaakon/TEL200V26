@@ -556,4 +556,42 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/python,linux,macos,windows,latex
+# End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python
+
+# Report latex stuff, the only thing we need version control on is main.tex
+Report/main.aux
+Report/main.bbl
+Report/main.bcf
+Report/main.blg
+Report/main.fdb_latexmk
+Report/main.fls
+Report/main.run.xml
+Report/main.synctex.gz
+Report/main.toc
+Report/main.out
+Report/Covers/*.aux
+
+ReportWalkingRobot/report.aux
+ReportWalkingRobot/report.bbl
+ReportWalkingRobot/report.bcf
+ReportWalkingRobot/report.blg
+ReportWalkingRobot/report.fdb_latexmk
+ReportWalkingRobot/report.fls
+ReportWalkingRobot/report.run.xml
+ReportWalkingRobot/report.synctex.gz
+ReportWalkingRobot/report.toc
+ReportWalkingRobot/report.out
+ReportWalkingRobot/Covers/*.aux
+
+
+# Stuff we notice that we don't want in the repository
+.python-version
+img/*
+*.mp4
+*.png
+images.txt
+.vscode/*
+log
+configs/*
+logs/*
+.vscode/*
