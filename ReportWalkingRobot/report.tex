@@ -122,14 +122,14 @@ an evaluation between PRM and A* search algorithm is made
 
 A robot leg is kinematically equivalent to a robot arm. For a statically stable
 quadruped, a three-joint serial-link manipulator is sufficient, since the foot
-makes point contact with the ground and orientation is not critical
-\cite{Corke2023}.
+makes point contact with the ground and orientation is not critical.
+(\cite{Corke2023})
 
 \begin{figure}[H]
     \centering
     \includegraphics[height=3cm]{images/Leg.png}
     \caption{Illustration of frame and axis rotations for the simple leg
-    \cite{Corke2023}}
+    (\cite{Corke2023})}
 \end{figure}
 
 The coordinate frame is defined with the $x$-axis pointing forward, the
@@ -160,7 +160,7 @@ gait}).
     \centering
     \includegraphics[height=3.5cm]{images/TrajectoryAndMotion.png}
     \caption{Trajectory of a single foot and motion of each leg
-    \cite{Corke2023}}
+    (\cite{Corke2023})}
 \end{figure}
 
 The foot path is defined by five via points forming a closed cycle:
@@ -215,7 +215,7 @@ described by three states:
     \centering
     \includegraphics[height=2.5cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
     \caption{Illustration of pose using unicycle model
-    \cite{Unicycle_model}}
+    (\cite{Unicycle_model})}
 \end{figure}
 
 where $x$ and $y$ are the position coordinates in the global reference frame
@@ -224,8 +224,8 @@ and $\theta$ is the heading angle relative to the $x$-axis.
 \subsection{Motion Primitives}
 
 The global motion of the robot is defined by two discrete motion primitives for
-forward translation of 10cm, and in-place rotation of 1\degree. Each primitive
-corresponds to one full gait cycle. A forward cycle produces a 10cm 
+forward translation of 10 cm, and in-place rotation of 1\degree. Each primitive
+corresponds to one full gait cycle. A forward cycle produces a 10 cm 
 displacement in the current heading direction, while a rotation cycle changes
  the orientation by 1\degree. The robot pose is updated using the unicycle model.
 
@@ -264,7 +264,7 @@ Robot path planning is divided into two phases: a \textit{planning phase},
 which analyses the map and constructs an obstacle-free network, and a
 \textit{query phase}, which finds a path between a given start and goal using
 that network. Roadmap methods decouple these phases, so the roadmap is computed
-once and reused for any start and goal combination \cite{Corke2023}.
+once and reused for any start and goal combination. (\cite{Corke2023})
 
 The Probabilistic Roadmap (PRM) method builds the roadmap by randomly sampling
 free-space vertices and connecting them with obstacle-free straight-line edges,
@@ -305,8 +305,8 @@ N_{\text{turn}} =
 Robot navigation requires two fundamental capabilities: knowing where the robot
 is (localization) and knowing what the environment looks like (mapping). These
 problems are deeply interdependent --- a map is needed for accurate
-localization, while a reliable pose estimate is needed to build a map
-\cite{Corke2023}.
+localization, while a reliable pose estimate is needed to build a map.
+(\cite{Corke2023})
 
 With the lidar data provided by the robot, we can map the area onto an occupancy grid in python
 using the scanmap() method.
