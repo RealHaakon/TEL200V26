@@ -1,0 +1,360 @@
+% report.tex - Frontpage for the report (place in Report/)
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+\usepackage[HTML]{xcolor}
+\usepackage{tikz}
+\usepackage{geometry}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{gensymb}
+\usepackage{ulem}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{microtype}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage[
+backend=biber,
+style=apa,
+sorting=ynt
+]{biblatex}
+\renewcommand{\bibfont}{\small}
+\addbibresource{bibliography/bibliography.bib}
+
+
+\geometry{margin=2.5cm}
+
+\AddToShipoutPictureBG{
+  \definecolor{sidebar}{HTML}{008571}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[sidebar]
+    (current page.north west)
+    rectangle
+    ([xshift=1.2cm]current page.south west);
+  \end{tikzpicture}
+}
+
+\begin{document}
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+    \vspace*{2cm}
+
+    % Logos at the corners
+    \begin{figure}[t]
+        \centering
+        \includegraphics[width=0.6\textwidth]{logos/nmbu_logo_tekst.jpeg}
+    \end{figure}
+    %\includegraphics[width=0.35\textwidth]{logos/eik_lab_logo.jpeg}\\[1.5cm]
+
+    {\Huge\bfseries TEL200 - Introduction to Robotics}\\[0.5cm]
+    {\Large\itshape Group 5}\\[1.5cm]
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=.7\textwidth]{images/yumi.jpeg}
+    \end{figure}
+    {\Large\itshape Yumi Lab Project}\\[1.5cm]
+
+    \rule{0.6\textwidth}{1pt}\\[0.8cm]
+
+    {\Large\bfseries Authors}\\[0.3cm]
+    {\large Andreas Brustad \\ Johannes Standal \\ Håkon Bekken}\\[1cm]
+
+    %{\large\bfseries Supervisor}\\[0.3cm]
+    %{\large Dr. Supervisor Name}\\[2cm]
+
+    {}
+
+    \vfill
+
+    \small Norwegian University of Life Sciences
+\end{titlepage}
+
+% NMBU watermark
+\AddToShipoutPictureBG{%
+  \AtPageUpperLeft{%
+    \raisebox{-2.3cm}{%
+      \hspace{1.14\textwidth}%
+      \includegraphics[width=2cm]{logos/nmbu_logo.png}
+    }%
+  }%
+}
+
+\tableofcontents
+
+\newpage
+
+\section{Abstract}
+This report details the process and results of a robotics project conducted as part of the course
+"TEL200 - Introduction to Robotics" at NMBU. The project involved programming the robot arm ABB-YuMi using
+ABB RobotStudio to do two distinct tasks referred to as "Yumi Application" and "Yumi Challenge" respectively.
+
+\subsection{Yumi Application}
+The Yumi Application involved programming the robot to manipulate a cube, a cylinder and a triangle based
+on their respective button inputs. Upon a button press, the robot would pick up the geometric object and place
+it in its designated location on the other side of the table. Through the use of joint space motion commands,
+gimbal locks and singularities were avoided, and the application successfully worked. An emergency stop button
+was also implemented successfully, as well as a button to have the robot return to its home position after
+an emergency stop.
+
+\subsection{Yumi Challenge}
+The Yumi Challenge involved programming the robot to play tic-tac-toe using a marker on paper. Button inputs
+would incrementally increase the x and y coordinates the robot would draw an X on, and the emergency and home
+buttons from the Yumi Application were implemented here as well. It was consistently successful in simulations,
+but practical testing was not as consistent. Several limitations of the current designed were discovered, and
+potential solutions are outlined in the report. Nevertheless, successful games of tic-tac-toe were still played
+with the robot.
+
+\section{Introduction}
+
+\subsection{Relevant theory for robot kinematics}
+Industrial robots like YuMi are modeled as serial kinematic chains, where joint configurations map to end-effector positions and orientations via forward and inverse kinematics. Joint-space motions are often preferred because they interpolate directly between known, safe configurations and avoid unexpected behavior in Cartesian space.
+
+A singularity occurs when the robots Jacobian loses rank, so that some Cartesian motions require infinite joint velocities or become unreachable. Near such configurations, small changes in the desired tool pose can cause large, unstable joint motions, which is why singularities must be avoided in trajectory planning.
+
+Gimbal lock is a related loss of rotational freedom that appears when two rotation axes align, effectively removing one independent degree of freedom. In robot wrists, analogous situations arise when joints line up so that certain orientations cannot be changed independently, leading to abrupt angle changes or poor controllability; careful selection of poses and joint-space paths reduces the likelihood of passing through these problematic regions.
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{ Illustration of gimbal lock (\cite{Gimbal_lock})}[0.5\linewidth]{
+    \includegraphics[height=5.5cm]{images/Gimbal_lock.png}
+}\hfill
+\subcaptionbox{Workspace and singularities (\cite{robodk_singularities})}[0.4\linewidth]{
+    \includegraphics[height=5.5cm]{images/workspaceAndSingularities.jpg}
+}
+\end{figure}
+
+\subsection{Yumi Application}
+The goal for the yumi application part of the project was to enable the robot to manipulate objects.
+There are three blocks that shall be moved to their appropriate location, a button input for each block,
+and one emergency stop button. The blocks are all different shapes, and each have two spots on the table.
+The corresponding button input shall cause the robot to pick the block up and move it to its other spot.
+It should stop in its tracks at the push of the emergency stop button. There is also a fourth button that
+will move the robot back to its home position. To achieve this goal we programmed the yumi lab robot
+using Robot Studio.
+
+\subsection{Yumi Challenge}
+The goal for the yumi challenge part of the project was to enable the robot to play tic tac toe.
+By placing paper on the table and making the robot grip a marker we could program it to draw shapes in
+the locations we want. Specifically, we made it draw an X at coordinate points in a $3\times3$ coordinate field.
+It's controlled through button inputs, one for the $x$-coordinate and one for the $y$-coordinate. Pressing the
+button will incrementally increase the corresponding value by 1. A third button is used to indicate that the
+desired values are reached, and start the related motion. To achieve this goal we programmed the yumi lab robot
+using Robot Studio.
+
+\subsection{Relevancy}
+Precision movements like these are very relevant in the current landscape of robotics. While the use case in industry
+might not be to match shapes like this, the ability to precisely manipulate objects with care and accuracy
+is incredibly important for areas like manufacturing. It allows for the handling of objects too
+difficult for people to handle with appropriate care, and it allows for automation of
+repetitive tasks.
+
+\section{Method}
+
+\subsection{YuMi Application}
+The control software for the dual‑arm YuMi robot (IRB 14000) was developed in ABB’s RAPID language using RobotStudio. The application implements a pick‑and‑place task for three objects (cube, cylinder, and triangular prism), each triggered by a dedicated digital input signal. The robot moves each object from its original position on the table to a corresponding “new” position, while returning to a safe home pose after each sequence.
+
+The program is contained in \texttt{MODULE Module1} and defines a set of \texttt{CONST robtarget} positions for each object, including approach points, gripping poses, and drop‑off locations. These targets are associated with separate work objects (\texttt{Kube}, \texttt{sylinder}, \texttt{prisme}), while global movements use \texttt{wobj0}. All motions are executed using \texttt{MoveJ} at speed \texttt{v500} with \texttt{fine} or \texttt{z100} accuracy, ensuring smooth and repeatable trajectories. Gripper commands (\texttt{g\_GripOut}/\texttt{g\_GripIn}) are followed by \texttt{WaitTime 2} to ensure reliable mechanical action.
+
+The system includes a fully functional emergency stop, implemented via an interrupt on the signal \texttt{di\_EmergencySituation}. When activated, the robot halts immediately using \texttt{StopMove} and the output \texttt{do\_emergency} is set high. After the emergency button is released, the robot checks the \texttt{di\_home} signal; if active, it returns to the \texttt{home} position and restarts the cycle, otherwise it restores and resumes the interrupted path. The emergency logic provide a simulated realistic button and emergency circuit behavior for testing and validation.
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Emergency button unpressed}[0.55\linewidth]{
+    \includegraphics[width=\linewidth]{images/ButtonUnpressed.png}
+}\hfill
+\subcaptionbox{Emergency button pressed}[0.40\linewidth]{
+    \includegraphics[width=\linewidth]{images/ButtonPressed.png}
+}
+\end{figure}
+
+
+\subsection{YuMi Challenge}
+The Tic-Tac-Toe project was implemented on the dual-arm YuMi robot using two independent RAPID modules --- one for the left arm and one for the right arm. Each arm operates autonomously but follows the same general logic: to select and draw an ``X'' in one of nine grid cells based on incoming digital signals.
+
+\subsubsection*{Program structure}
+Both arms continuously poll three digital inputs:
+\begin{itemize}
+  \item \texttt{di\_cube}: increments the X coordinate
+  \item \texttt{di\_cylinder}: increments the Y coordinate
+  \item \texttt{di\_prism}: confirms path execution
+\end{itemize}
+Two counters (\texttt{X} and \texttt{Y}) track the selected grid cell. Depending on the X--Y combination, the program calls one of several path procedures such as \texttt{Path\_P00}, \texttt{Path\_P11}, or \texttt{Path\_P22}.
+
+The human-robot grid is divided between the arms as follows:
+\begin{table}[H]
+  \centering
+  \caption{Grid cell assignment to robot arms}
+  \begin{tabular}{c|c|c|c}
+    \toprule
+           & \textbf{X=0} & \textbf{X=1} & \textbf{X=2} \\
+    \midrule
+    \textbf{Y=0} & Right: P00 & Right: P10 & Left: P20 \\
+    \textbf{Y=1} & Right: P01 & Right: P11 & Left: P21 \\
+    \textbf{Y=2} & Right: P02 & Left: P12  & Left: P22 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Yumi Challenge Setup}[0.5\linewidth]{
+    \includegraphics[height=5cm]{images/yumichallengeSetup.png}
+}\hfill
+\subcaptionbox{Yumi challenge live}[0.5\linewidth]{
+    \includegraphics[height=5cm]{images/yumichallengeLiveSetup.png}
+}
+\end{figure}
+
+\subsubsection*{Path execution}
+When a cell is selected, the corresponding path procedure executes a fixed sequence:
+\begin{enumerate}
+  \item Move to the home position.
+  \item Move to \texttt{PenCenter} (safe pose above pen holder).
+  \item Open gripper (\texttt{g\_GripOut}), descend to \texttt{PenPickDrop}, and close gripper (\texttt{g\_GripIn}) to pick up the pen.
+  \item Move through a series of target points to draw an ``X''.
+  \item Return to \texttt{PenCenter}, drop off the pen, and return to home.
+  \item Reset both \texttt{X} and \texttt{Y} to zero, ready for the next move.
+\end{enumerate}
+Joint motions (\texttt{MoveJ}) are used for most positioning, while linear motions (\texttt{MoveL}) ensure smooth, straight drawing lines. Speeds are set to \texttt{v500} with fine or small blending zones (\texttt{z50}--\texttt{z100}) depending on path precision.
+
+\subsection{CAD Models}
+To support reliable pen handling, a custom CAD design was created for both the \textbf{pen holder} and the \textbf{pen adapter}. The parts were designed in Autodesk Fusion 360 and 3D-printed in PETG.
+The holder fixes the pen in a repeatable position on the table, while the adapter ensures proper orientation and grip alignment with the robot's fingers. This modular approach improved drawing consistency and made tool pickup or drop-off fully repeatable between runs.
+Also a pen was designed in Autodesk that is identical in dimentions to the marker used in order to get correct point to floor distance while programming in rapid.
+A rendering of the final design is shown in figure bellow. 
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{The pen holder}[0.3\linewidth]{
+    \includegraphics[height=3cm]{images/MarkerHolder.png}
+}\hfill
+\subcaptionbox{The pen adapter}[0.25\linewidth]{
+    \includegraphics[height=3cm]{images/Pen adapter.png}
+}\hfill
+\subcaptionbox{3D pen}[0.15\linewidth]{
+    \includegraphics[height=3cm]{images/Pen.png}
+}\hfill
+\subcaptionbox{Pen+adapter assembled}[0.3\linewidth]{
+    \includegraphics[height=3cm]{images/IMG_7242.JPG}
+}\hfill
+\subcaptionbox{Live demo of gripping mechanicm}[0.5\linewidth]{
+    \includegraphics[height=9cm]{images/Grip.png}
+}
+\caption{How the CAD models was implemented}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Simulation of drawing}[0.5\linewidth]{
+    \includegraphics[height=7.5cm]{images/drawingsim.png}
+}\hfill
+\subcaptionbox{Drawing during real simulation}[0.5\linewidth]{
+    \includegraphics[height=7.5cm]{images/RealDrawing.png}
+}
+\end{figure}
+
+\section{Results}
+
+\subsection{Yumi application}
+The YuMi application was successfully implemented and verified both in simulation and on the physical robot,
+with the pick-and-place sequences for all three objects executing as planned. The emergency stop button worked as intended,
+stopping the robot in its tracks, both in simulation and in practice, and the home button ensured it returned home after an
+emergency stop if pressed. As a result, the robot was able to move reliably between home, approach,
+and grasp poses without unexpected singular behavior or loss of orientational degrees of freedom.
+
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Yumi application live}[0.3\linewidth]{
+    \includegraphics[height=4cm]{images/YumiApplicationLive.png}
+}\hfill
+\subcaptionbox{Yumi simulation emergency}[0.4\linewidth]{
+    \includegraphics[height=4cm]{images/YumiApplicationSimEmergency.png}
+}\hfill
+\subcaptionbox{Yumi live emergency}[0.3\linewidth]{
+    \includegraphics[height=4cm]{images/YumiApplicationLiveEmergency.png}
+}
+\end{figure}
+
+
+\subsection{Yumi challenge}
+In the Tic-Tac-Toe challenge, the overall logic for coordinate selection and path execution functioned as intended, but the live experiments revealed several practical limitations. During repeated pen handover and parking operations, we experienced collisions between the pen and the holder, which eventually led to mechanical failure of one gripper finger,
+despite using nominally identical target points and trajectories for the right and left arms.
+The YuMi system proved very sensitive to external impacts and contact forces; even small unintended forces triggered the built-in collision detection,
+causing the robot to stop and requiring manual intervention before motion could resume.
+
+The drawing performance was also somewhat inconsistent, with small deviations in the contact point or pen orientation leading to visible variation in line quality and stroke placement, which highlighted the need for highly accurate and repeatable target positions on the paper surface.
+The custom-designed pen holder and gripper adapter were therefore a significant asset,
+as they helped standardize the pen pose relative to the robot and improved the consistency between simulation and live execution by providing a repeatable mechanical interface during pickup and drop-off.
+
+\begin{figure}[H]
+\centering
+\subcaptionbox{Insert problem}[0.3\linewidth]{
+    \includegraphics[height=6cm]{images/InsertProblem.png}
+}\hfill
+\subcaptionbox{Misalignment of point}[0.4\linewidth]{
+    \includegraphics[width=6cm,angle=270]{images/IMG_7225.jpeg}
+}\hfill
+\subcaptionbox{Broken finger}[0.3\linewidth]{
+    \includegraphics[width=6cm,angle=270]{images/IMG_7226.jpeg}
+}
+\caption{Some problems along the way}
+\end{figure}
+
+\section{Discussion}
+\subsection{Yumi Application}
+The robot functioned as intended both in simulation and in practice. We believe a key factor in achieving reliable
+behavior was the consistent use of joint-space motion commands (\texttt{MoveJ}). We found that linear motions
+increased the likelihood of the robot encountering orientations in which gimbal locks or singularities occurred.
+The use of joint-space motion commands ensured consistently acceptable behaviour in motion processes for this task.
+
+\subsection{Yumi Challenge}
+We believe there are several potential reasons for inconsistent marker placements in the pen holder.
+The first one is that several seemingly insignificant collisions, such as when the marker is drawing
+on the paper, shifts its orientation in the adapter. This leads to it entering the pen holder with a different
+angle than it exited with. Another potential reason is the usage of joint-space motion commands. While it's programmed
+to move to the same point every time, this type of motion can lead to slight inaccuracies. Finally, it could also
+be because the pen holder was positioned far enough away that the robot was close to reaching a singularity when
+putting the marker down.
+\\\\
+The first potential issue can be remedied by simply making the adapter longer, further reducing
+the markers ability to shift orientation. The second potential issue can be fixed by using linear
+joint movements instead, though that can prove challenging with potential gimbal locks. The third
+potential issue can be fixed by simply repositioning the pen holder to a more convenient spot for the robot.
+A bigger challenge however is the inconsistent
+drawing quality. Since all the robot moves draw at the exact same height, variations in the height
+of the platform it's drawing on will lead to inconsistent quality, if not a complete lack of
+ability to draw in certain areas. Our stacking of paper lead to such variations.
+A potential way to remedy this is to implement a spring system in
+the platform, leading to the marker always hitting without giving so much resistance that the marker
+orientation changes or the robot detects a collision. Another way is to simply implement a completely
+flat surface at the correct height.
+
+\section{Conclusions}
+\subsection{Yumi Application}
+In conclusion, we successfully programmed the yumi robot to manipulate the desired objects based on user
+button inputs. Each button led to its respective shape being picked up and moved to its designated
+location. The use of joint space motion commands let us avoid gimbal locks and singularities. The
+emergency stop button functioned as intended, stopping the robot in its tracks when pressed, and resuming when
+released. A video of both the simulation and practical testing was recorded and uploaded to youtube. (\cite{yumiapplication})
+\subsection{Yumi challenge}
+In conclusion, while our implementation worked in simulation, practical testing revealed several limitations.
+These limitations were due to several potential reasons, with several potential ways of fixing them. Despite
+these revealed limitations however, the robot did mostly act as intended, leading to successful games of
+tic-tac-toe. By implementing the measures outlined in the discussion, the results should be even more consistent.
+A video of both the simulation and practical testing was recorded and uploaded to youtube. (\cite{yumichallenge})
+\section{Bibliography}
+\printbibliography
+\end{document}

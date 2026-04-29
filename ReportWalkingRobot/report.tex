@@ -1,0 +1,602 @@
+% report.tex - Frontpage for the report (place in Report/)
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+\usepackage[HTML]{xcolor}
+\usepackage{tikz}
+\usepackage{geometry}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{gensymb}
+\usepackage{ulem}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{microtype}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage[
+backend=biber,
+style=apa,
+sorting=ynt
+]{biblatex}
+\renewcommand{\bibfont}{\small}
+\addbibresource{bibliography/bibliography.bib}
+
+\geometry{margin=2.5cm}
+
+\AddToShipoutPictureBG{
+  \definecolor{sidebar}{HTML}{008571}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[sidebar]
+    (current page.north west)
+    rectangle
+    ([xshift=1.2cm]current page.south west);
+  \end{tikzpicture}
+}
+
+\begin{document}
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+    \vspace*{2cm}
+
+    \includegraphics[width=0.6\textwidth]{logos/nmbu_logo_tekst.jpeg}
+
+    {\Huge\bfseries TEL200 - Introduction to Robotics}\\[0.5cm]
+    {\Large\itshape Group 5}\\[1.5cm]
+
+    \includegraphics[width=.7\textwidth]{images/WalkingRobot.jpg}
+
+    {\Large\itshape Walking Robot Project}\\[1.5cm]
+
+    \rule{0.6\textwidth}{1pt}\\[0.8cm]
+
+    {\Large\bfseries Authors}\\[0.3cm]
+    {\large Andreas Brustad \\ Johannes Standal \\ Håkon Bekken}\\[1cm]
+
+    \vfill
+
+    \small Norwegian University of Life Sciences
+\end{titlepage}
+
+\AddToShipoutPictureBG{%
+  \AtPageUpperLeft{%
+    \raisebox{-2.3cm}{%
+      \hspace{1.14\textwidth}%
+      \includegraphics[width=2cm]{logos/nmbu_logo.png}
+    }%
+  }%
+}
+
+% ============================================================
+\section{Abstract}
+% ============================================================
+This report concerns the design and implementation of a simulated quadruped
+walking robot. The project covers three main topics: motion planning for
+coordinated leg movement, path planning for navigation, and
+localization and mapping based on real lidar data. Together, these form the
+core components of an autonomous robotic system.
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+\subsection{Motion Planning}
+
+A quadruped walking robot requires coordinated control of four legs, each
+kinematically equivalent to a three-joint serial-link manipulator. Gait
+generation ensures static stability by keeping at least three feet in contact
+with the ground at all times, dividing each leg's motion into a stance phase
+and a reset phase. The resulting crawl gait is achieved by assigning each leg
+a phase-shifted version of the same cyclic foot trajectory.
+
+\subsection{Path Planning}
+
+For a robot to navigate an environment, it must plan a collision-free path from
+a start position to a goal. The Probabilistic Roadmap (PRM) method addresses
+this by constructing a sparse graph of obstacle-free paths through the free
+space during an offline planning phase. Once built, the roadmap can be reused
+to answer any start-to-goal query efficiently, making PRM well suited to
+large-scale and high-dimensional planning problems.
+
+\subsection{Localization and Mapping}
+
+Autonomous navigation requires a robot to know both its own position
+(localization) and the structure of its environment (mapping). These two
+problems are interdependent: a map is needed for localization, and a pose
+estimate is needed for mapping. For the particular problem using the real lidar data over Killian court,
+an evaluation between PRM and A* search algorithm is made 
+
+% ============================================================
+\section{Method}
+% ============================================================
+
+\subsection{Motion Planning}
+
+A robot leg is kinematically equivalent to a robot arm. For a statically stable
+quadruped, a three-joint serial-link manipulator is sufficient, since the foot
+makes point contact with the ground and orientation is not critical.
+(\cite{Corke2023})
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=3cm]{images/Leg.png}
+    \caption{Illustration of frame and axis rotations for the simple leg
+    (\cite{Corke2023})}
+\end{figure}
+
+The coordinate frame is defined with the $x$-axis pointing forward, the
+$z$-axis upward, and the $y$-axis to the left. The leg link lengths are
+$L_1 = L_2 = -100\,\text{mm}$. The hip has two degrees of freedom: rotation
+about the $z$-axis (forward/backward) and rotation about the $x$-axis
+(up/down). The knee is offset by $L_1$ in the $y$-direction and rotates about
+the $x$-axis, while the foot is offset by $L_2$ in the $z$-direction. In ETS
+notation:
+
+\begin{equation}
+    \texttt{leg} = R_z \cdot R_x \cdot T_y(L_1) \cdot R_x \cdot T_z(L_2)
+\end{equation}
+
+At zero joint angles, forward kinematics yields a foot position of
+$(0,\ -0.1,\ -0.1)\,\text{m}$, confirming the design.
+
+During the \textit{stance phase}, the foot remains in contact with the ground
+50\,mm below the hip, moving from 50\,mm forward to 50\,mm behind the hip to
+propel the body forward. During the \textit{reset phase}, the foot lifts to
+20\,mm below the hip, swings forward, and is placed back on the ground. To
+maintain static stability, at least three feet must remain on the ground at all
+times, so each leg spends 75\% of the cycle in stance and 25\% resetting.
+This coordinated pattern is known as a \textit{crawl gait} (or \textit{wave
+gait}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=3.5cm]{images/TrajectoryAndMotion.png}
+    \caption{Trajectory of a single foot and motion of each leg
+    (\cite{Corke2023})}
+\end{figure}
+
+The foot path is defined by five via points forming a closed cycle:
+
+\begin{equation}
+    \mathbf{p}_{\text{via}} =
+    \begin{bmatrix}
+        x_f & y & z_d \\
+        x_b & y & z_d \\
+        x_b & y & z_u \\
+        x_f & y & z_u \\
+        x_f & y & z_d
+    \end{bmatrix}
+\end{equation}
+
+where $x_f = 50\,\text{mm}$, $x_b = -50\,\text{mm}$, $y = -50\,\text{mm}$,
+$z_u = -20\,\text{mm}$, and $z_d = -50\,\text{mm}$. The path is sampled at
+100\,Hz using \texttt{mstraj} with segment times
+$[3,\ 0.25,\ 0.5,\ 0.25]\,\text{s}$, giving a 4\,s cycle of 400 points.
+Joint angle trajectories are obtained by numerical inverse kinematics, solving
+only for end-effector translation:
+
+\begin{equation}
+    \texttt{mask} = [1,\ 1,\ 1,\ 0,\ 0,\ 0]
+\end{equation}
+
+The robot body has width $W = 100\,\text{mm}$ and length $L = 200\,\text{mm}$.
+Four leg instances are placed at the body corners using base transforms. Legs
+on the left side (legs 2 and 3) are rotated by $\pi$ about the $z$-axis so
+they point outward from the body. Each leg runs the same cyclic trajectory with
+a phase offset of one quarter of the cycle (100 points), achieved via modulo
+indexing:
+
+\begin{equation}
+    k' = (k + \phi) \mod N
+\end{equation}
+
+where $k$ is the current time step, $\phi \in \{0, 100, 200, 300\}$ is the
+phase offset per leg, and $N = 400$ is the total cycle length. For legs on the
+right-hand side, the sign of the first joint angle is flipped to mirror the
+motion symmetrically.
+
+For global positioning the robot is modelled as \textit{unicycle}, a common kinematic abstraction
+for mobile robots moving on a planar surface. The robot pose is fully
+described by three states:
+
+\begin{equation}
+    \mathbf{x}_v = (x,\, y,\, \theta)^T
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=2.5cm]{images/Unicycle-model-of-a-wheeled-mobile-robot.png}
+    \caption{Illustration of pose using unicycle model
+    (\cite{Unicycle_model})}
+\end{figure}
+
+where $x$ and $y$ are the position coordinates in the global reference frame
+and $\theta$ is the heading angle relative to the $x$-axis.
+
+\subsection{Motion Primitives}
+
+The global motion of the robot is defined by two discrete motion primitives for
+forward translation of 10 cm, and in-place rotation of 1\degree. Each primitive
+corresponds to one full gait cycle. A forward cycle produces a 10 cm 
+displacement in the current heading direction, while a rotation cycle changes
+ the orientation by 1\degree. The robot pose is updated using the unicycle model.
+
+\begin{equation}
+x_{k+1} = x_k + \Delta s \cos\theta_k,\qquad
+y_{k+1} = y_k + \Delta s \sin\theta_k,\qquad
+\theta_{k+1} = \theta_k + \Delta\theta
+\end{equation}
+
+
+
+Utilizing these motion primitives, we can achieve planar motion
+by combining forward and rotational steps. However since both
+translation and rotation are reduced to certain numbers, some loss of precision occurs.
+
+Forward motion is performed in steps of 100\,mm. This means the robot
+cannot move an exact distance smaller than 100\,mm. When approaching a
+waypoint, the maximum positional overshoot is therefore limited to
+approximately 50\,mm (half a step). Similarly, rotational motion is
+limited to integer degrees, making it impossible to represent
+non-integer heading angles exactly.
+
+Over longer paths, these small discretization effects may accumulate and
+cause deviation from the ideal continuous trajectory. To reduce this
+effect, the robot continuously tracks its position relative to the next
+node in the PRM path. Any small translational or angular overshoot is
+naturally corrected when aligning toward the following node.
+
+Although this approach reduces mobility resolution, the resulting error
+remains bounded and acceptable for the scale of the simulated
+environment.
+
+\subsection{Path Planning}
+
+Robot path planning is divided into two phases: a \textit{planning phase},
+which analyses the map and constructs an obstacle-free network, and a
+\textit{query phase}, which finds a path between a given start and goal using
+that network. Roadmap methods decouple these phases, so the roadmap is computed
+once and reused for any start and goal combination. (\cite{Corke2023})
+
+The Probabilistic Roadmap (PRM) method builds the roadmap by randomly sampling
+free-space vertices and connecting them with obstacle-free straight-line edges,
+forming an embedded graph. With sufficiently many vertices, the graph spans the
+entire free space. The connectivity depends on the number of sampled points;
+too few vertices may result in disjoint components, preventing valid paths from
+being found.
+
+Once the roadmap is constructed, the query phase finds a path by connecting the
+start position to the nearest roadmap vertex, traversing the graph via a
+minimum-distance route, and exiting at the vertex closest to the goal. The
+path is represented as an ordered list of via points:
+
+\begin{equation}
+    \mathbf{p} = \{\mathbf{p}_0,\ \mathbf{p}_1,\ \dots,\ \mathbf{p}_n\}
+\end{equation}
+
+Let the robot pose be $(x_r, y_r, \theta_r)$ and the next waypoint
+$(x_t, y_t)$. The required walking and turning cycles are computed as
+
+\begin{equation}
+d = \sqrt{(x_t - x_r)^2 + (y_t - y_r)^2},
+\qquad
+N_{\text{walk}} = \mathrm{round}\!\left(\frac{d}{100\,\text{mm}}\right),
+\end{equation}
+
+\begin{equation}
+\Delta\theta =
+\left((\mathrm{atan2}(y_t - y_r, x_t - x_r) - \theta_r + \pi)
+\bmod 2\pi\right) - \pi,
+\qquad
+N_{\text{turn}} =
+\mathrm{round}\!\left(\frac{\Delta\theta}{1^\circ}\right).
+\end{equation}
+
+\subsection{Localization and Mapping}
+
+Robot navigation requires two fundamental capabilities: knowing where the robot
+is (localization) and knowing what the environment looks like (mapping). These
+problems are deeply interdependent --- a map is needed for accurate
+localization, while a reliable pose estimate is needed to build a map.
+(\cite{Corke2023})
+
+With the lidar data provided by the robot, we can map the area onto an occupancy grid in python
+using the scanmap() method.
+The occupancy grid is represented as a grid of cells, where each cell has a value indicating
+its occupancy. The way this value is calculated is by first going through the rays and using the Bresenham line-drawing
+algorithm to find the cells each ray passes through. The cell at the end of its path has its value reduced by one, and the rest
+of the cells on the path has their respective values increased by one. Through this incrementation, each cell that has rays pass through
+them ends up with a value indicating how occupied it is.
+In the scanmap() method, it then goes on to clamp the values to be either $-1$, $0$ or $1$. If
+the cell's value is negative, it is assumed to be occupied, and its final value is $-1$. If
+the cell's value is zero, it is decided to be unknown, and the value stays at zero. And finally,
+if the cell's value is positive, it is assumed to be free space, and the value is set to $1$.
+\\\\
+To modify the scanmap() method to arrive at a binary occupancy grid, where if more than $M$
+lidar scans confirm a cell is free, the cell has value $0$, otherwise $1$, a few steps were taken:
+\begin{itemize}
+    \item The decrementation of cells needs to be removed, as the task description states that a cell is free if more than $M$
+    rays pass through it, not if at least $M$ more rays pass through than don't.
+    \item In the original implementation it only goes through $20\%$ of the rays. This needs to be modified to go
+    through all rays.
+    \item The final step in the scanmap() method needs to be modified for a threshold of $M$ rather than
+    $0$. The clamp in the final step also needs to be modified to clamp to $0$ and $1$ to make it binary.
+    And the final step also needs to be modified to return a binary occupancy grid.
+\end{itemize} 
+The implementation of these modifications is given as follows:
+\begin{figure}[H]
+\centering
+    \subcaptionbox{Modified scanmap() part 1}[0.2\linewidth]{
+        \includegraphics[width=4cm]{images/KillianMap/scanmap1.png}
+    }\hfill
+    \subcaptionbox{Modified scanmap() part 2}[0.2\linewidth]{
+        \includegraphics[width=4cm]{images/KillianMap/scanmap2.png}
+    
+    }\hfill
+    \subcaptionbox{Modified scanmap() part 3}[0.2\linewidth]{
+        \includegraphics[width=4cm]{images/KillianMap/scanmap3.png}    
+    }
+\end{figure}
+
+
+To implement a PRM path-planner for the free space in this occupancy grid, we create a PRMPlanner object
+linked to the binary occupancy grid from modified\_scanmap. Because there is a lot of free space outside the
+intended area, npoints is set rather high in order to make proper coverage of the intended area more probable.
+\\\\
+An alternative path planning algorithm that can be more efficient than PRM is $A^*$. The way this works is
+you store three essential values for each cell in the grid:
+\begin{align*}
+    g(n) &\rightarrow \text{The calculated cost from start to here} \\
+    h(n) &\rightarrow \text{The estimated cost from here to goal} \\
+    f(n) &\rightarrow \text{The sum of $g$ and $h$, the total estimated cost of path}
+\end{align*}
+You sort these into two different categories: Open, which are yet to be evaluated, and closed, which have
+been evaluated. You evaluate the neighbour cells of the current cell in this way until you've either reached
+the goal, and thus have found the cheapest path, or until the open category is empty, in which case
+there is no path to the goal. The python implementation of this is as follows:
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{.2\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarcode1.png}
+        \caption{$A^*$ algorithm part 1}
+    \end{minipage}
+    \begin{minipage}{.2\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarcode2.png}
+        \caption{$A^*$ algorithm part 2}
+    \end{minipage}
+    \begin{minipage}{.2\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarcode3.png}
+        \caption{$A^*$ algorithm part 3}
+    \end{minipage}
+    \begin{minipage}{.2\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarcode4.png}
+        \caption{$A^*$ algorithm part 4}
+    \end{minipage}
+\end{figure}
+
+% ============================================================
+\section{Results}
+% ============================================================
+
+\subsection{Motion Planning}
+The implemented crawl gait produced stable forward motion in the
+simulation. At all times, at least three legs remained in contact with
+the ground, ensuring static stability. No tipping or oscillatory
+instabilities were observed during straight-line walking.
+
+Each gait cycle resulted in an approximate forward displacement of
+100\,mm, as intended by the motion primitive design. Small deviations
+from the ideal displacement were observed due to numerical inverse
+kinematics and floating-point rounding, but these errors remained
+negligible over short distances. The turning was also affected by
+floating point precision errors, however the angular error did not cause instability.
+
+When combining rotation and translation primitives, the robot was able
+to approximate arbitrary planar trajectories. Although the motion is
+piecewise discrete rather than continuous, the resulting path closely
+resembled the desired trajectory for the scale of the simulated
+environment.
+
+Overall, the motion primitive framework provided predictable and stable
+locomotion, with bounded discretization error that was acceptable for
+subsequent path-following tasks.
+
+
+\subsection{Path Planning}
+
+The PRM graph contains a parameter specifying the number of nodes in the
+roadmap. The objective is to determine a suitable node count for the given
+house map. If too few nodes are used, the graph may contain disconnected
+subgraphs (see Fig.~\ref{fig:prm_density}), causing large parts of the
+environment to become unreachable. On the other hand, using too many nodes
+increases computational cost and reduces performance.
+
+To determine a suitable value, one could use an analytical iterative
+approach. However, for this project an empirical approach was chosen,
+as it is sufficient for evaluating performance in a fixed environment.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM50.png}
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM100.png}
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM300.png}
+    \includegraphics[width=0.20\textwidth]{images/PRM_images/maps/PRM1000.png}
+    \caption{Low node
+    counts result in disconnected components, while higher node counts
+    improve connectivity at the cost of computation time.}
+    \label{fig:prm_density}
+\end{figure}
+
+From Fig.~\ref{fig:prm_density}, it can be observed that 300 nodes provide
+sufficient connectivity throughout the house without producing
+disconnected subgraphs. This enables path planning between almost any two
+points in the environment while keeping computation time reasonable.
+
+Using the PRM planner with 300 nodes, five different paths were generated
+for the robot to follow, as shown in Fig.~\ref{fig:prm_paths}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 0.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 1.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 2.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 3.png}
+    \includegraphics[width=0.25\textwidth]{images/PRM_images/paths/path 4.png}
+
+    \caption{Five example paths generated using the PRM with 300 nodes.}
+    \label{fig:prm_paths}
+\end{figure}
+
+To execute a planned path, the robot is first placed at the start
+coordinate using the custom \texttt{GOTO(x, y)} method in the
+\texttt{WalkingRobot} class. The robot continuously evaluates its own pose
+relative to the next waypoint in the path. This compensates for the
+accumulated discretization error introduced by the motion primitives
+described in Section~3.2.
+
+The robot executes the primitives sequentially: it first performs the
+required number of turning cycles, then executes the walking cycles.
+This process is repeated for each waypoint until the final node in the
+path is reached.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\textwidth]{images/PathFollowing.png}
+    \caption{Walking robot following a path}
+\end{figure}
+
+\subsection{Localization and mapping}
+Generating PRM-planners with 50, 150, 300, 500 and 1000 nodes led to the following
+results, including the base map generated by modified\_scanmap():
+\begin{figure}[H]
+\centering
+    \subcaptionbox{Killian Map}[0.1\linewidth]{
+        \includegraphics[height=2.5cm]{images/KillianMap/KillianMap.png}
+    }\hfill
+    \subcaptionbox{PRM n=50}[0.1\linewidth]{
+        \includegraphics[height=2.5cm]{images/KillianMap/prm_50pt.png}
+    }
+    \hfill
+    \subcaptionbox{PRM n=150}[0.1\linewidth]{
+        \includegraphics[height=2.5cm]{images/KillianMap/prm_150pt.png}
+    }
+    \hfill
+    \subcaptionbox{PRM n=300}[0.1\linewidth]{
+        \includegraphics[height=2.5cm]{images/KillianMap/prm_300pt.png}
+    }\hfill
+    \subcaptionbox{PRM n=500}[0.1\linewidth]{
+        \includegraphics[height=2.5cm]{images/KillianMap/prm_500pt.png}
+    }\hfill
+    \subcaptionbox{PRM n=1000}[0.1\linewidth]{
+        \includegraphics[height=2.5cm]{images/KillianMap/prm_1000pt.png}
+    }
+
+    
+\caption{Killian map binary occupancy grid and PRM graphs}
+\label{fig:prmKillian}
+\end{figure}
+
+With four different cases of randomly generated start coordinates (blue point), and
+randomly generated goal coordinates (green point), the results of the $A^*$ algorithm
+are as follows given in red lines:
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{.22\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarpath1.png}
+    \end{minipage}
+    \begin{minipage}{.22\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarpath2.png}
+    \end{minipage}
+    \begin{minipage}{.22\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarpath3.png}
+    \end{minipage}
+    \begin{minipage}{.22\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/AStar/astarpath4.png}
+    \end{minipage}
+\end{figure}
+
+% ============================================================
+
+% ============================================================
+
+\section{Discussion}
+\subsection{Motion Planning and Path Following}
+
+The implemented leg kinematics produced stable motion in simulation. While the
+model behaves consistently in the simulated environment, it is likely
+that a physical implementation would require more refined modeling,
+better dynamics handling, and feedback control to achieve smooth and
+realistic motion.
+
+A major limitation of the system is the use of only two motion
+primitives: 100\,mm forward translation and $1^\circ$ in-place rotation.
+Although this simplifies control, it significantly limits motion
+resolution. The robot cannot perform fine adjustments efficiently.
+Turning is slow because large rotations require many
+$1^\circ$ cycles. A more flexible primitive set (e.g., $30^\circ$,
+$10^\circ$, $5^\circ$, and $1^\circ$ rotations) would improve both
+speed and performance.
+
+During path execution, the robot was generally able to follow the
+planned paths. However, small overshoot and undershoot effects were
+observed due to discretization of motion. These errors remained bounded
+and were partially corrected when the robot aligned toward the next
+waypoint.
+
+The generated PRM paths were valid but not always smooth. Since the
+robot executes a turn-then-walk strategy at each waypoint, the overall
+motion becomes piecewise and slow. Additionally, the PRM struggles in narrow rooms and near
+corners, where random sampling may fail to provide sufficient coverage.
+As a result, some regions close to walls are difficult or impossible
+to reach. However as a side bonus this can make up for the absence of collision detection,
+by making the robot less likely to walk near walls and corners.
+
+In general the system is modular and well structured.
+The separation between gait generation, motion primitives, and path
+planning makes it straightforward to replace the PRM algorithm or
+extend the motion primitive set. Despite its simplifications, the robot
+successfully completed all required tasks in the assignment.
+
+\subsection{Localization and mapping}
+From Fig.~\ref{fig:prmKillian}, the binary occupancy grid produced by the
+modified scanmap() method captures the main structure of the Killian hallways.
+Walls are clearly defined, and the free space inside corridors is visible.
+This indicates that the lidar processing and thresholding approach works
+as intended for generating a usable map representation.
+\\\\
+From the PRM map attempts it can also be observed that even with a huge amount
+of nodes, the PRM is still unable to provide sufficient connectivity throughout 
+the Killian hallways. This drastically increases the chance of an error when attempting to 
+plan a path between two points in the environment. This is because tight corridors and
+sharp turns require more points concentrated around them in order to establish connectivity.
+Therefore, the amount of points needs to be quite large for the probability of connection to be
+at a reliable level. 
+\\\\
+The $A^*$ algorithm on the other hand is able to cover the entire grid, and with it's
+best first search approach is likely to find the best path quite quickly. Because of the tight
+hallways and sharp turns of the Killian court, the $A^*$ algorithm is therefore more efficient
+to consider.
+
+
+% ============================================================
+\section{Bibliography}
+\printbibliography
+% ============================================================
+
+\end{document}
