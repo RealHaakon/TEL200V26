@@ -111,10 +111,8 @@ large-scale and high-dimensional planning problems.
 Autonomous navigation requires a robot to know both its own position
 (localization) and the structure of its environment (mapping). These two
 problems are interdependent: a map is needed for localization, and a pose
-estimate is needed for mapping. When neither is known in advance, they must be
-solved simultaneously, a problem known as Simultaneous Localization and
-Mapping (SLAM).
-
+estimate is needed for mapping. For the particular problem using the real lidar data over Killian court,
+an evaluation between PRM and A* search algorithm is made 
 
 % ============================================================
 \section{Method}
@@ -594,10 +592,6 @@ The $A^*$ algorithm on the other hand is able to cover the entire grid, and with
 best first search approach is likely to find the best path quite quickly. Because of the tight
 hallways and sharp turns of the Killian court, the $A^*$ algorithm is therefore more efficient
 to consider.
-
-% ============================================================
-
-% ============================================================
 
 
 % ============================================================
