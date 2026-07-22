@@ -14,7 +14,7 @@
 <hr>
 
 <h2>Project 1: Yumi Application</h2>
-<p>A robotic drawing challenge using the ABB YuMi robot arm. The robot picks up a pen and draws target shapes on a whiteboard.</p>
+<p>A robotic drawing challenge using the ABB YuMi robot arm. The robot picks up a pen and draws target shapes on paper.</p>
 
 <img src="./report/images/YumiApplicationLive.png" alt="Yumi drawing live" width="600">
 
