@@ -29,6 +29,12 @@
 </tr>
 </table>
 
+<h3>Videos</h3>
+<ul>
+    <li><a href="https://www.youtube.com/watch?v=Ibx3zCbb01c">Yumi Challenge</a></li>
+    <li><a href="https://www.youtube.com/watch?v=7HEYf_l690Q">Yumi Application</a></li>
+</ul>
+
 <hr>
 
 <h2>Project 2: Walking Robot</h2>
@@ -46,4 +52,9 @@
 <td><img src="./ReportWalkingRobot/images/Unicycle-model-of-a-wheeled-mobile-robot.png" alt="Unicycle model" width="300"></td>
 </tr>
 </table>
+
+<h3>Videos</h3>
+<ul>
+    <li><a href="https://www.youtube.com/watch?v=s7YNcI4iuiI">Walking Robot</a></li>
+</ul>
 
